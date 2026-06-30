@@ -2,7 +2,7 @@
   "name": "colorful-tmpl",
   "displayName": "Colorful tmpl",
   "description": "Colorful syntax highlighting for Go templates — rainbow nesting backgrounds, variable spotting",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "d-led",
   "private": true,
   "license": "MPL-2.0",
@@ -26,8 +26,18 @@
     "languages": [
       {
         "id": "colorful-tmpl",
-        "aliases": ["Go Template", "colorful-tmpl", "gomplate"],
-        "extensions": [".gotmpl", ".tpl", ".gtpl", ".gohtml", ".tmpl"],
+        "aliases": [
+          "Go Template",
+          "colorful-tmpl",
+          "gomplate"
+        ],
+        "extensions": [
+          ".gotmpl",
+          ".tpl",
+          ".gtpl",
+          ".gohtml",
+          ".tmpl"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -81,7 +91,9 @@
           "colorfulTmplVariable:colorfulTmplAssignment": [
             "variable.other.readwrite.colorful-tmpl"
           ],
-          "colorfulTmplVariable": ["variable.other.colorful-tmpl"]
+          "colorfulTmplVariable": [
+            "variable.other.colorful-tmpl"
+          ]
         }
       }
     ],
@@ -95,7 +107,9 @@
         },
         "colorful-tmpl.rainbow.palette": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [
             "rgba(173, 216, 230, 0.20)",
             "rgba(144, 238, 144, 0.20)",
@@ -136,7 +150,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@colorful-tmpl/highlight-core": "*"
+    "@colorful-tmpl/highlight-core": "0.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
