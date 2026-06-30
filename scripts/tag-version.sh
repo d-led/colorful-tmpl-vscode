@@ -58,5 +58,6 @@ if [[ "$dry_run" == true ]]; then
 fi
 
 git tag -a "$tag" -m "Version $version"
+log_ok "Tag $tag created."
 log_ok "Created tag $tag"
 echo "Push with: git push && git push --tags"
