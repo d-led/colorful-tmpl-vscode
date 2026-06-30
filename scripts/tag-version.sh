@@ -10,8 +10,8 @@ set -euo pipefail
 #   - tag v<version> does not already exist
 #
 # Usage:
-#   bash scripts/tag-version.sh
-#   bash scripts/tag-version.sh --dry-run
+#   bash scripts/tag-version.sh           # create v0.0.2 from package.json
+#   bash scripts/tag-version.sh --dry-run # show what would happen
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
@@ -42,7 +42,7 @@ fi
 version=$(node -e "process.stdout.write(require('./$CANONICAL_PKG').version)")
 tag="v$version"
 
-if git rev-parse --verify --quiet "$tag" >/dev/null 2>&1; then
+if git rev-parse --verify --quiet "$tag" >/dev/null; then
   log_error "Tag $tag already exists."
   exit 1
 fi
@@ -53,9 +53,10 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
 fi
 
 if [[ "$dry_run" == true ]]; then
-  log_info "Would create annotated tag $tag at HEAD (from $CANONICAL_PKG)."
+  log_info "Would create annotated tag $tag at HEAD (version from $CANONICAL_PKG)."
   exit 0
 fi
 
 git tag -a "$tag" -m "Version $version"
-log_ok "Tag $tag created."
+log_ok "Created tag $tag"
+echo "Push with: git push && git push --tags"
