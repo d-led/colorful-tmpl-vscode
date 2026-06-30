@@ -1,0 +1,5 @@
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 165, 70, 0.32)">{{ coll.Slice "a" "b" | sort | join ", " }}</span>
+<span style="background:rgba(255, 165, 70, 0.32)">{{ index .map "key" }}</span>
+<span style="background:rgba(255, 165, 70, 0.32)">{{ print (len .items) }}</span>
+<span style="background:rgba(255, 165, 70, 0.32)">{{ and .a .b .c | not }}</span>
+<span style="background:rgba(204, 170, 50, 0.28)">{{ eq $x 42 | or (ne $y "") }}</span></pre>

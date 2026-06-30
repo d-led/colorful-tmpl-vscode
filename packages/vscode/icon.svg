@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="16" fill="#1e1e2e"/>
+  <!-- Tree trunk -->
+  <rect x="58" y="60" width="12" height="40" rx="3" fill="#8B7355"/>
+  <!-- Canopy -- layered rainbow circles -->
+  <circle cx="36" cy="48" r="20" fill="rgba(255,182,193,0.8)"/>
+  <circle cx="92" cy="48" r="20" fill="rgba(255,255,150,0.8)"/>
+  <circle cx="48" cy="32" r="20" fill="rgba(221,160,221,0.8)"/>
+  <circle cx="80" cy="32" r="20" fill="rgba(255,218,185,0.8)"/>
+  <circle cx="64" cy="20" r="22" fill="rgba(144,238,144,0.8)"/>
+  <circle cx="64" cy="48" r="18" fill="rgba(173,216,230,0.8)"/>
+  <!-- Action delimiters -->
+  <text x="64" y="96" text-anchor="middle" font-family="monospace" font-size="24" font-weight="bold" fill="#cdd6f4">{{ }}</text>
+</svg>

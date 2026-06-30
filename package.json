@@ -1,0 +1,39 @@
+{
+  "name": "colorful-trees-forest-monorepo",
+  "private": true,
+  "description": "Go template rainbow syntax highlighter — monorepo",
+  "license": "MPL-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "bootstrap": "npm install",
+    "setup": "npm install && npm run build -w @gotmpl/highlight-core",
+    "build": "npm run build -w @colorful-tmpl/highlight-core && npm run build -w colorful-tmpl",
+    "clean": "npm run -ws --if-present clean",
+    "format": "prettier --write 'packages/*/src/**/*.ts' 'packages/*/syntaxes/*.json'",
+    "format:check": "prettier --check 'packages/*/src/**/*.ts' 'packages/*/syntaxes/*.json'",
+    "typecheck": "tsc -b",
+    "test": "vitest run -c vitest.config.ts",
+    "test:watch": "vitest -c vitest.config.ts",
+    "test:coverage": "vitest run -c vitest.config.ts --coverage",
+    "vscode:package": "npm run build -w colorful-tmpl && cd packages/vscode && npx vsce package",
+    "vscode:install": "npm run build -w colorful-tmpl && cd packages/vscode && npx vsce package && code --install-extension *.vsix",
+    "approvals:test": "vitest run packages/core/src/render-html.approval.test.ts; npm run approvals:glue",
+    "approvals:approve:all": "cd packages/core/src && for f in *.received.txt; do cp \"$f\" \"${f/.received/.approved}\"; done && cd ../../.. && node scripts/glue-approvals.mjs approved",
+    "approvals:reject:all": "cd packages/core/src && rm -f *.received.txt",
+    "approvals:glue": "node scripts/glue-approvals.mjs all",
+    "approvals:view": "npm run approvals:glue && open packages/core/src/approved-dark.html"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "approvals": "^7.3.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.0.0"
+  }
+}

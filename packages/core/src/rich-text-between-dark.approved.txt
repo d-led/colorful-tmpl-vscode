@@ -1,0 +1,14 @@
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0"># <span style="background:rgba(255, 165, 70, 0.32)">{{ .title }}</span>
+
+<span style="background:rgba(255, 165, 70, 0.32)">{{ .intro }}</span>
+
+## Features
+<span style="background:rgba(135, 206, 250, 0.28)">{{ range .features }}</span><span style="background:rgba(144, 238, 144, 0.14)">
+- **</span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(255, 165, 70, 0.32)">{{ .name }}</span></span><span style="background:rgba(144, 238, 144, 0.14)">**: </span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(255, 165, 70, 0.32)">{{ .description }}</span></span><span style="background:rgba(144, 238, 144, 0.14)">
+  </span><span style="background:rgba(135, 206, 250, 0.28)">{{ if .experimental }}</span><span style="background:rgba(255, 218, 185, 0.16)">⚠️ </span><span style="background:rgba(255, 165, 70, 0.32)">{{ .note }}</span><span style="background:rgba(135, 206, 250, 0.28)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.14)">
+</span><span style="background:rgba(135, 206, 250, 0.28)">{{ end }}</span>
+
+## Config
+<span style="background:rgba(135, 206, 250, 0.28)">{{ with .config }}</span><span style="background:rgba(144, 238, 144, 0.14)">
+host=</span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(255, 165, 70, 0.32)">{{ .host }}</span></span><span style="background:rgba(144, 238, 144, 0.14)">  port=</span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(255, 165, 70, 0.32)">{{ .port }}</span></span><span style="background:rgba(144, 238, 144, 0.14)">
+</span><span style="background:rgba(135, 206, 250, 0.28)">{{ end }}</span></pre>

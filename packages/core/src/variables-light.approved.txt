@@ -1,0 +1,7 @@
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w := "" }}</span>
+<span style="background:rgba(135, 206, 250, 0.45)">{{ if 1 }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w = "world" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w = "earth" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+Hello, <span style="background:rgba(190, 160, 50, 0.22)">{{ print $w }}</span>!</pre>

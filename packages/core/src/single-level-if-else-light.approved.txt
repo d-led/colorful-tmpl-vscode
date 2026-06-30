@@ -1,0 +1,5 @@
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ if true }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+the truth
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+not truth
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>

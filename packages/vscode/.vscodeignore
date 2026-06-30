@@ -1,0 +1,12 @@
+.vscode/**
+src/**
+dist/test/**
+test-results/**
+**/*.tsbuildinfo
+tsconfig*.json
+esbuild.extension.mjs
+*.vsix
+*.tgz
+dist/**/*.d.ts
+dist/**/*.d.ts.map
+node_modules/**

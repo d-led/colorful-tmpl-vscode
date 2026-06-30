@@ -1,0 +1,148 @@
+{
+  "name": "colorful-tmpl",
+  "displayName": "Colorful tmpl",
+  "description": "Colorful syntax highlighting for Go templates — rainbow nesting backgrounds, variable spotting",
+  "version": "0.1.0",
+  "publisher": "d-led",
+  "private": true,
+  "license": "MPL-2.0",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/d-led/colorful-trees-forest.git",
+    "directory": "packages/vscode"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:colorful-tmpl"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "colorful-tmpl",
+        "aliases": ["Go Template", "colorful-tmpl", "gomplate"],
+        "extensions": [".gotmpl", ".tpl", ".gtpl", ".gohtml", ".tmpl"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "colorful-tmpl",
+        "scopeName": "text.colorful-tmpl",
+        "path": "./syntaxes/gotmpl.tmLanguage.json"
+      },
+      {
+        "scopeName": "colorful-tmpl.injection",
+        "path": "./syntaxes/gotmpl-injection.json",
+        "injectTo": [
+          "text.html",
+          "text.html.derivative",
+          "text.yaml",
+          "source.yaml",
+          "source.json",
+          "text.xml",
+          "text.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.colorful-tmpl": "colorful-tmpl"
+        }
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "colorfulTmplVariable",
+        "superType": "variable",
+        "description": "A Go template variable ($name)"
+      }
+    ],
+    "semanticTokenModifiers": [
+      {
+        "id": "colorfulTmplDefinition",
+        "description": "A Go template variable definition ($x :=)"
+      },
+      {
+        "id": "colorfulTmplAssignment",
+        "description": "A Go template variable assignment ($x =)"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "colorful-tmpl",
+        "scopes": {
+          "colorfulTmplVariable:colorfulTmplDefinition": [
+            "variable.other.readwrite.colorful-tmpl"
+          ],
+          "colorfulTmplVariable:colorfulTmplAssignment": [
+            "variable.other.readwrite.colorful-tmpl"
+          ],
+          "colorfulTmplVariable": ["variable.other.colorful-tmpl"]
+        }
+      }
+    ],
+    "configuration": {
+      "title": "Colorful tmpl",
+      "properties": {
+        "colorful-tmpl.rainbow.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable rainbow background highlighting for nested template actions."
+        },
+        "colorful-tmpl.rainbow.palette": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [
+            "rgba(173, 216, 230, 0.20)",
+            "rgba(144, 238, 144, 0.20)",
+            "rgba(255, 218, 185, 0.20)",
+            "rgba(221, 160, 221, 0.20)",
+            "rgba(255, 255, 150, 0.20)",
+            "rgba(255, 182, 193, 0.20)"
+          ],
+          "markdownDescription": "Background colors for nesting levels (rotates). Use rgba() or hex."
+        },
+        "colorful-tmpl.rainbow.variableHighlight": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Highlight variable definitions and uses with distinct backgrounds."
+        },
+        "colorful-tmpl.rainbow.variableDefColor": {
+          "type": "string",
+          "default": "rgba(100, 255, 100, 0.25)",
+          "markdownDescription": "Background color for variable writes ($x := and $x =)."
+        },
+        "colorful-tmpl.rainbow.variableUseColor": {
+          "type": "string",
+          "default": "rgba(100, 200, 255, 0.15)",
+          "markdownDescription": "Background color for variable uses ($x)."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[colorful-tmpl]": {
+        "editor.semanticHighlighting.enabled": true
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.extension.mjs",
+    "clean": "rm -rf dist",
+    "package": "npm run build && npx vsce package",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@colorful-tmpl/highlight-core": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0",
+    "vitest": "^3.0.0"
+  }
+}

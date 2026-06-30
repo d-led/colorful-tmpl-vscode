@@ -1,0 +1,15 @@
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ define "T1" }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+L1 top
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .show }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  L2 </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $x := 1 }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .items }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+    L3 </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(221, 160, 221, 0.30)">
+    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ with .sub }}</span><span style="background:rgba(255, 255, 150, 0.30)">
+      L4 </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .deep }}</span></span><span style="background:rgba(255, 255, 150, 0.30)"> </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ print $x }}</span></span><span style="background:rgba(255, 255, 150, 0.30)">
+    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+    L3 after with </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(221, 160, 221, 0.30)">
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  L2 after range
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+L1 bottom
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>

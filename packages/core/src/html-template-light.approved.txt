@@ -1,0 +1,14 @@
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">&lt;html&gt;
+&lt;body&gt;
+  <span style="background:rgba(135, 206, 250, 0.45)">{{ block "header" . }}</span><span style="background:rgba(144, 238, 144, 0.30)">&lt;h1&gt;</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .site }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">&lt;/h1&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+  <span style="background:rgba(135, 206, 250, 0.45)">{{ if .posts }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  &lt;ul&gt;
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .posts }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+    &lt;li&gt;&lt;h2&gt;</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .title }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">&lt;/h2&gt;
+    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .tags }}</span><span style="background:rgba(221, 160, 221, 0.30)">&lt;span&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .tags }}</span><span style="background:rgba(255, 255, 150, 0.30)">#</span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ . }}</span></span><span style="background:rgba(255, 255, 150, 0.30)"> </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">&lt;/span&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+    &lt;/li&gt;
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  &lt;/ul&gt;
+  </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">&lt;p&gt;None.&lt;/p&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+&lt;/body&gt;
+&lt;/html&gt;</pre>

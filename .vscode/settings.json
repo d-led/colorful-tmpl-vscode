@@ -1,0 +1,9 @@
+{
+  "files.associations": {
+    "*.approved.txt": "html",
+    "*.received.txt": "html"
+  },
+  "[html]": {
+    "editor.wordWrap": "off"
+  }
+}

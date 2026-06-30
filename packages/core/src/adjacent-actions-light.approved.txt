@@ -1,0 +1,1 @@
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 150, 50, 0.28)">{{ a }}{{ b }}</span></pre>

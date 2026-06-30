@@ -1,0 +1,5 @@
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 165, 70, 0.32)">{{ index .array 0 }}</span>
+<span style="background:rgba(255, 165, 70, 0.32)">{{ index .map "foo-bar" }}</span>
+<span style="background:rgba(255, 165, 70, 0.32)">{{ index .nested "a" (print "b") "c" }}</span>
+<span style="background:rgba(255, 165, 70, 0.32)">{{ .map.foo }}</span>
+<span style="background:rgba(204, 170, 50, 0.28)">{{ $.rootKey }}</span></pre>

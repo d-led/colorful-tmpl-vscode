@@ -1,0 +1,3 @@
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(140, 140, 140, 0.20)">{{/* this is a comment */}}</span>
+<span style="background:rgba(135, 206, 250, 0.28)">{{ if true }}</span><span style="background:rgba(140, 140, 140, 0.20)">{{/* another comment */}}</span><span style="background:rgba(144, 238, 144, 0.14)">hello</span><span style="background:rgba(135, 206, 250, 0.28)">{{ end }}</span>
+<span style="background:rgba(135, 206, 250, 0.28)">{{ range .items }}</span><span style="background:rgba(140, 140, 140, 0.20)">{{/* TODO: handle nil */}}</span><span style="background:rgba(204, 170, 50, 0.28)">{{ . }}</span><span style="background:rgba(135, 206, 250, 0.28)">{{ end }}</span></pre>

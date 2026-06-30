@@ -1,0 +1,73 @@
+{
+  "scopeName": "gotmpl.injection",
+  "injectionSelector": "L:text.html -comment -string, L:text.xml -comment -string, L:text.markdown -comment -string, L:source.yaml -comment -string, L:source.json -comment -string",
+  "patterns": [
+    {
+      "include": "#gotmpl-action"
+    }
+  ],
+  "repository": {
+    "gotmpl-action": {
+      "begin": "(\\{\\{-?)",
+      "end": "(-?\\}\\})",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.template.begin.gotmpl" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.template.end.gotmpl" }
+      },
+      "patterns": [
+        { "include": "#gotmpl-comment" },
+        { "include": "#gotmpl-string" },
+        { "include": "#gotmpl-variable" },
+        { "include": "#gotmpl-keyword" },
+        { "include": "#gotmpl-function" },
+        { "include": "#gotmpl-pipe" },
+        { "include": "#gotmpl-dot" },
+        { "include": "#gotmpl-number" }
+      ],
+      "name": "meta.embedded.block.gotmpl"
+    },
+    "gotmpl-comment": {
+      "begin": "/\\*",
+      "end": "\\*/",
+      "name": "comment.block.gotmpl"
+    },
+    "gotmpl-string": {
+      "patterns": [
+        {
+          "match": "\"([^\"\\\\]|\\\\.)*\"",
+          "name": "string.quoted.double.gotmpl"
+        },
+        {
+          "match": "`[^`]*`",
+          "name": "string.quoted.backtick.gotmpl"
+        }
+      ]
+    },
+    "gotmpl-variable": {
+      "match": "\\$[a-zA-Z_][a-zA-Z0-9_.]*",
+      "name": "variable.other.gotmpl"
+    },
+    "gotmpl-keyword": {
+      "match": "\\b(if|else|end|range|with|define|block|template)\\b",
+      "name": "keyword.control.gotmpl"
+    },
+    "gotmpl-function": {
+      "match": "\\b[a-zA-Z_][a-zA-Z0-9]*(?:\\.[a-zA-Z_][a-zA-Z0-9]*)*\\b",
+      "name": "entity.name.function.gotmpl"
+    },
+    "gotmpl-pipe": {
+      "match": "\\|",
+      "name": "keyword.operator.pipe.gotmpl"
+    },
+    "gotmpl-dot": {
+      "match": "\\.",
+      "name": "variable.language.gotmpl"
+    },
+    "gotmpl-number": {
+      "match": "\\b[0-9]+(?:\\.[0-9]+)?\\b",
+      "name": "constant.numeric.gotmpl"
+    }
+  }
+}

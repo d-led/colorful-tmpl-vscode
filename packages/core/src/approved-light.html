@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Approved Snapshots</title>
+<style>
+  body { background: #ffffff; color: #1e1e2e; font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
+  h2 { color: #8839ef; margin: 24px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #dce0e8; }
+  h3 { color: #179299; margin: 16px 0 4px; font-size: 13px; }
+  hr { border: 0; height: 0; }
+</style>
+</head>
+<body>
+<h1>Approved Snapshots</h1>
+<h2>adjacent-actions</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 150, 50, 0.28)">{{ a }}{{ b }}</span></pre>
+
+<hr>
+<h2>comments</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(160, 160, 160, 0.18)">{{/* this is a comment */}}</span>
+<span style="background:rgba(135, 206, 250, 0.45)">{{ if true }}</span><span style="background:rgba(160, 160, 160, 0.18)">{{/* another comment */}}</span><span style="background:rgba(144, 238, 144, 0.30)">hello</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+<span style="background:rgba(135, 206, 250, 0.45)">{{ range .items }}</span><span style="background:rgba(160, 160, 160, 0.18)">{{/* TODO: handle nil */}}</span><span style="background:rgba(190, 160, 50, 0.22)">{{ . }}</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+
+<hr>
+<h2>double-nesting</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ if .show }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .items }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  - </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+
+<hr>
+<h2>four-level-nesting</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ define "T1" }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+L1 top
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .show }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  L2 </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $x := 1 }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .items }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+    L3 </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(221, 160, 221, 0.30)">
+    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ with .sub }}</span><span style="background:rgba(255, 255, 150, 0.30)">
+      L4 </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .deep }}</span></span><span style="background:rgba(255, 255, 150, 0.30)"> </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ print $x }}</span></span><span style="background:rgba(255, 255, 150, 0.30)">
+    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+    L3 after with </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(221, 160, 221, 0.30)">
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  L2 after range
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+L1 bottom
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+
+<hr>
+<h2>functions-and-pipes</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 150, 50, 0.28)">{{ coll.Slice "a" "b" | sort | join ", " }}</span>
+<span style="background:rgba(255, 150, 50, 0.28)">{{ index .map "key" }}</span>
+<span style="background:rgba(255, 150, 50, 0.28)">{{ print (len .items) }}</span>
+<span style="background:rgba(255, 150, 50, 0.28)">{{ and .a .b .c | not }}</span>
+<span style="background:rgba(190, 160, 50, 0.22)">{{ eq $x 42 | or (ne $y "") }}</span></pre>
+
+<hr>
+<h2>gomplate-pipeline</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{- range .items }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  Task: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+  Status: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .status | upper }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+  Due: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .due | date "2006-01-02" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .urgent }}</span><span style="background:rgba(255, 218, 185, 0.35)">⚠️ URGENT</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .notes | default "—" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{- end }}</span></pre>
+
+<hr>
+<h2>html-template</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">&lt;html&gt;
+&lt;body&gt;
+  <span style="background:rgba(135, 206, 250, 0.45)">{{ block "header" . }}</span><span style="background:rgba(144, 238, 144, 0.30)">&lt;h1&gt;</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .site }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">&lt;/h1&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+  <span style="background:rgba(135, 206, 250, 0.45)">{{ if .posts }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  &lt;ul&gt;
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .posts }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+    &lt;li&gt;&lt;h2&gt;</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .title }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">&lt;/h2&gt;
+    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .tags }}</span><span style="background:rgba(221, 160, 221, 0.30)">&lt;span&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .tags }}</span><span style="background:rgba(255, 255, 150, 0.30)">#</span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ . }}</span></span><span style="background:rgba(255, 255, 150, 0.30)"> </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">&lt;/span&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+    &lt;/li&gt;
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  &lt;/ul&gt;
+  </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">&lt;p&gt;None.&lt;/p&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<hr>
+<h2>indexing</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 150, 50, 0.28)">{{ index .array 0 }}</span>
+<span style="background:rgba(255, 150, 50, 0.28)">{{ index .map "foo-bar" }}</span>
+<span style="background:rgba(255, 150, 50, 0.28)">{{ index .nested "a" (print "b") "c" }}</span>
+<span style="background:rgba(255, 150, 50, 0.28)">{{ .map.foo }}</span>
+<span style="background:rgba(190, 160, 50, 0.22)">{{ $.rootKey }}</span></pre>
+
+<hr>
+<h2>no-nesting</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">Hello, <span style="background:rgba(255, 150, 50, 0.28)">{{ print "World" }}</span>!</pre>
+
+<hr>
+<h2>range-with-index-var</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ range $index, $element := .items }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  #</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ $index }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ $element.name }}</span></span><span style="background:rgba(144, 238, 144, 0.30)"> (</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ $element.count }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">)
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+
+<hr>
+<h2>rich-text-between</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"># <span style="background:rgba(255, 150, 50, 0.28)">{{ .title }}</span>
+
+<span style="background:rgba(255, 150, 50, 0.28)">{{ .intro }}</span>
+
+## Features
+<span style="background:rgba(135, 206, 250, 0.45)">{{ range .features }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+- **</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">**: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .description }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .experimental }}</span><span style="background:rgba(255, 218, 185, 0.35)">⚠️ </span><span style="background:rgba(255, 150, 50, 0.28)">{{ .note }}</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+
+## Config
+<span style="background:rgba(135, 206, 250, 0.45)">{{ with .config }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+host=</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .host }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">  port=</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .port }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+
+<hr>
+<h2>single-level-if-else</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ if true }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+the truth
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+not truth
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+
+<hr>
+<h2>sql-template</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">SELECT
+  <span style="background:rgba(135, 206, 250, 0.45)">{{ range $i, $c := .cols }}{{ if $i }}</span><span style="background:rgba(255, 218, 185, 0.35)">, </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">"</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ $c }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">"</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+FROM <span style="background:rgba(255, 150, 50, 0.28)">{{ .table }}</span>
+WHERE 1=1
+<span style="background:rgba(135, 206, 250, 0.45)">{{ range .filters }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  AND "</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .col }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">" </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .op }}</span></span><span style="background:rgba(144, 238, 144, 0.30)"> </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if eq .op "IN" }}</span><span style="background:rgba(255, 218, 185, 0.35)">(
+    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ range $j, $v := .vals }}{{ if $j }}</span><span style="background:rgba(255, 255, 150, 0.30)">, </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(190, 160, 50, 0.22)">{{ $v }}</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  )</span><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span><span style="background:rgba(255, 150, 50, 0.28)">{{ .val }}</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+LIMIT <span style="background:rgba(255, 150, 50, 0.28)">{{ .limit }}</span></pre>
+
+<hr>
+<h2>text-in-else-block</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{- if .inputMap }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+        pipe_in = { </span><span style="background:rgba(135, 206, 250, 0.45)">{{- range .inputMap }}</span><span style="background:rgba(255, 218, 185, 0.35)">"</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .to }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">": pipe_out.get("</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .from }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">"), </span><span style="background:rgba(135, 206, 250, 0.45)">{{- end}}</span><span style="background:rgba(144, 238, 144, 0.30)"> }
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{- else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+        pipe_in = pipe_out
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{- end }}</span></pre>
+
+<hr>
+<h2>triple-nesting</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ if .enabled }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+outer
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .groups }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  middle
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ with .item }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+    inner </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .value }}</span></span><span style="background:rgba(221, 160, 221, 0.30)">
+  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+trailing
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+
+<hr>
+<h2>variables</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w := "" }}</span>
+<span style="background:rgba(135, 206, 250, 0.45)">{{ if 1 }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w = "world" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w = "earth" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+Hello, <span style="background:rgba(190, 160, 50, 0.22)">{{ print $w }}</span>!</pre>
+
+<hr>
+<h2>whitespace-trimming</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{- range .items -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{- .name }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{- end -}}</span>
+<span style="background:rgba(135, 206, 250, 0.45)">{{ if true -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  yes
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{- else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+  no
+</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+
+<hr>
+</body>
+</html>
