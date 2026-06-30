@@ -42,7 +42,7 @@ fi
 version=$(node -e "process.stdout.write(require('./$CANONICAL_PKG').version)")
 tag="v$version"
 
-if git rev-parse --verify --quiet "$tag" >/dev/null; then
+if git rev-parse --verify --quiet "$tag" >/dev/null 2>&1; then
   log_error "Tag $tag already exists."
   exit 1
 fi
