@@ -54,4 +54,4 @@ The injection grammar also fires inside `.html`, `.yaml`, `.json`, `.xml`, and `
 
 ## License
 
-MIT
+MPLv2
