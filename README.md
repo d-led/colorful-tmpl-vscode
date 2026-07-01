@@ -12,10 +12,10 @@
 
 ## Packages
 
-| Package | npm | Description |
-|---|---|---|
-| `@gotmpl/highlight-core` | [npm] | Editor-agnostic Go template lexer with nesting tracking |
-| `gotmpl-vscode` | VS Code Marketplace | VS Code extension: grammars + rainbow decorations |
+| Package                  | npm                 | Description                                             |
+| ------------------------ | ------------------- | ------------------------------------------------------- |
+| `@gotmpl/highlight-core` | [npm]               | Editor-agnostic Go template lexer with nesting tracking |
+| `gotmpl-vscode`          | VS Code Marketplace | VS Code extension: grammars + rainbow decorations       |
 
 ## Development
 
@@ -32,14 +32,14 @@ npm run vscode:package      # Create .vsix
 {
   "gotmpl.rainbow.enabled": true,
   "gotmpl.rainbow.palette": [
-    "rgba(173, 216, 230, 0.20)",  // light blue
-    "rgba(144, 238, 144, 0.20)",  // light green
-    "rgba(255, 218, 185, 0.20)",  // peach
-    "rgba(221, 160, 221, 0.20)",  // plum
-    "rgba(255, 255, 150, 0.20)",  // light yellow
-    "rgba(255, 182, 193, 0.20)"   // light pink
+    "rgba(173, 216, 230, 0.20)", // light blue
+    "rgba(144, 238, 144, 0.20)", // light green
+    "rgba(255, 218, 185, 0.20)", // peach
+    "rgba(221, 160, 221, 0.20)", // plum
+    "rgba(255, 255, 150, 0.20)", // light yellow
+    "rgba(255, 182, 193, 0.20)", // light pink
   ],
-  "gotmpl.rainbow.variableHighlight": true
+  "gotmpl.rainbow.variableHighlight": true,
 }
 ```
 
