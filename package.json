@@ -10,6 +10,7 @@
     "packages/*"
   ],
   "overrides": {
+    "diff": "8.0.3",
     "glob": "13.0.6"
   },
   "scripts": {
@@ -23,8 +24,8 @@
     "test": "vitest run -c vitest.config.ts",
     "test:watch": "vitest -c vitest.config.ts",
     "test:coverage": "vitest run -c vitest.config.ts --coverage",
-    "vscode:package": "npm run build -w colorful-tmpl && cd packages/vscode && npx vsce package",
-    "vscode:install": "npm run build -w colorful-tmpl && cd packages/vscode && npx vsce package && code --install-extension *.vsix",
+    "vscode:package": "npm run build -w colorful-tmpl && cd packages/vscode && npx vsce package --no-dependencies",
+    "vscode:install": "npm run build -w colorful-tmpl && cd packages/vscode && npx vsce package --no-dependencies && code --install-extension *.vsix",
     "approvals:test": "vitest run packages/core/src/render-html.approval.test.ts; npm run approvals:glue",
     "approvals:approve:all": "cd packages/core/src && for f in *.received.txt; do [ -f \"$f\" ] && cp \"$f\" \"${f/.received/.approved}\"; done; cd ../../.. && node scripts/glue-approvals.mjs approved",
     "approvals:reject:all": "cd packages/core/src && rm -f *.received.txt",

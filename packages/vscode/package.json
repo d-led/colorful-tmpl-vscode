@@ -4,7 +4,6 @@
   "description": "Colorful syntax highlighting for Go templates — rainbow nesting backgrounds, variable spotting",
   "version": "0.1.1",
   "publisher": "d-led",
-  "private": true,
   "license": "MPL-2.0",
   "icon": "icon.png",
   "repository": {
@@ -146,13 +145,11 @@
   "scripts": {
     "build": "node esbuild.extension.mjs",
     "clean": "rm -rf dist",
-    "package": "npm run build && npx vsce package",
+    "package": "npm run build && npx vsce package --no-dependencies",
     "test": "vitest run"
   },
-  "dependencies": {
-    "@colorful-tmpl/highlight-core": "0.1.1"
-  },
   "devDependencies": {
+    "@colorful-tmpl/highlight-core": "0.1.1",
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.95.0",
     "@vscode/vsce": "^3.0.0",

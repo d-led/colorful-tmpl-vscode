@@ -10,3 +10,4 @@ esbuild.extension.mjs
 dist/**/*.d.ts
 dist/**/*.d.ts.map
 node_modules/**
+icon.svg

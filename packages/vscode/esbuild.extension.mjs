@@ -15,7 +15,7 @@ await esbuild.build({
   target: ["node20"],
   external: ["vscode"],
   outfile: join(distDir, "extension.js"),
-  minify: true,
+  minify: false,
   keepNames: true,
   legalComments: "none",
   logLevel: "info",

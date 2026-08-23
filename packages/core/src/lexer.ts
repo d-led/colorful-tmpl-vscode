@@ -3,13 +3,7 @@ import { Token, TokenType } from "./types.js";
 /**
  * Set of Go template keywords that introduce a new nesting level.
  */
-const BLOCK_START = new Set([
-  "if",
-  "range",
-  "with",
-  "define",
-  "block",
-]);
+const BLOCK_START = new Set(["if", "range", "with", "define", "block"]);
 
 /**
  * Set of Go template keywords that *do not* introduce a new nesting level.

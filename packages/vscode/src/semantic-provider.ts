@@ -33,13 +33,25 @@ export class ColorfulTmplSemanticTokensProvider
           builder.push(new vscode.Range(startPos, endPos), "keyword");
           break;
         case TokenType.VariableDef:
-          builder.push(new vscode.Range(startPos, endPos), "colorfulTmplVariable", ["colorfulTmplDefinition"]);
+          builder.push(
+            new vscode.Range(startPos, endPos),
+            "colorfulTmplVariable",
+            ["colorfulTmplDefinition"],
+          );
           break;
         case TokenType.VariableAssign:
-          builder.push(new vscode.Range(startPos, endPos), "colorfulTmplVariable", ["colorfulTmplAssignment"]);
+          builder.push(
+            new vscode.Range(startPos, endPos),
+            "colorfulTmplVariable",
+            ["colorfulTmplAssignment"],
+          );
           break;
         case TokenType.VariableUse:
-          builder.push(new vscode.Range(startPos, endPos), "colorfulTmplVariable", ["readonly"]);
+          builder.push(
+            new vscode.Range(startPos, endPos),
+            "colorfulTmplVariable",
+            ["readonly"],
+          );
           break;
       }
     }

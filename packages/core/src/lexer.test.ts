@@ -154,7 +154,9 @@ describe("tokenize: keywords and nesting", () => {
       "{{ if true }}{{ range . }}{{ with . }}deep{{ end }}{{ end }}{{ end }}",
     );
     // deep is inside if (level 1) > range (level 2) > with (level 3)
-    const deepText = result.find((t) => t.type === TokenType.Text && t.nestingLevel === 3);
+    const deepText = result.find(
+      (t) => t.type === TokenType.Text && t.nestingLevel === 3,
+    );
     expect(deepText).toBeDefined();
   });
 
@@ -174,7 +176,9 @@ describe("tokenize: keywords and nesting", () => {
   });
 
   it("recognizes define and template as keywords", () => {
-    const types = tokenTypes('{{ define "T1" }}body{{ end }}{{ template "T1" . }}');
+    const types = tokenTypes(
+      '{{ define "T1" }}body{{ end }}{{ template "T1" . }}',
+    );
     const keywords = types.filter((t) => t === TokenType.Keyword);
     // define, end, template = 3 keywords
     expect(keywords).toHaveLength(3);

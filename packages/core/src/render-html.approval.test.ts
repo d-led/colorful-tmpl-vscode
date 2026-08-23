@@ -21,23 +21,31 @@ describe("renderColoredHtml: nesting backgrounds", () => {
   });
 
   it("single level — if/else/end with text between", () => {
-    verifyBoth("single-level-if-else", `{{ if true }}
+    verifyBoth(
+      "single-level-if-else",
+      `{{ if true }}
 the truth
 {{ else }}
 not truth
-{{ end }}`);
+{{ end }}`,
+    );
   });
 
   it("double nesting — range inside if", () => {
-    verifyBoth("double-nesting", `{{ if .show }}
+    verifyBoth(
+      "double-nesting",
+      `{{ if .show }}
 {{ range .items }}
   - {{ .name }}
 {{ end }}
-{{ end }}`);
+{{ end }}`,
+    );
   });
 
   it("triple nesting — with inside range inside if", () => {
-    verifyBoth("triple-nesting", `{{ if .enabled }}
+    verifyBoth(
+      "triple-nesting",
+      `{{ if .enabled }}
 outer
 {{ range .groups }}
   middle
@@ -47,25 +55,32 @@ outer
   {{ .name }}
 {{ end }}
 trailing
-{{ end }}`);
+{{ end }}`,
+    );
   });
 
   it("text between actions gets colored at block level", () => {
-    verifyBoth("text-in-else-block", `{{- if .inputMap }}
+    verifyBoth(
+      "text-in-else-block",
+      `{{- if .inputMap }}
         pipe_in = { {{- range .inputMap }}"{{ .to }}": pipe_out.get("{{ .from }}"), {{- end}} }
 {{- else }}
         pipe_in = pipe_out
-{{- end }}`);
+{{- end }}`,
+    );
   });
 
   it("variables: definition, assignment, and use", () => {
-    verifyBoth("variables", `{{ $w := "" }}
+    verifyBoth(
+      "variables",
+      `{{ $w := "" }}
 {{ if 1 }}
 {{ $w = "world" }}
 {{ else }}
 {{ $w = "earth" }}
 {{ end }}
-Hello, {{ print $w }}!`);
+Hello, {{ print $w }}!`,
+    );
   });
 
   it("adjacent actions with no text gap", () => {
@@ -73,17 +88,22 @@ Hello, {{ print $w }}!`);
   });
 
   it("gomplate-style template with pipeline", () => {
-    verifyBoth("gomplate-pipeline", `{{- range .items }}
+    verifyBoth(
+      "gomplate-pipeline",
+      `{{- range .items }}
   Task: {{ .name }}
   Status: {{ .status | upper }}
   Due: {{ .due | date "2006-01-02" }}
   {{ if .urgent }}⚠️ URGENT{{ end }}
   {{ .notes | default "—" }}
-{{- end }}`);
+{{- end }}`,
+    );
   });
 
   it("four-level nesting — define > if > range > with", () => {
-    verifyBoth("four-level-nesting", `{{ define "T1" }}
+    verifyBoth(
+      "four-level-nesting",
+      `{{ define "T1" }}
 L1 top
 {{ if .show }}
   L2 {{ $x := 1 }}
@@ -97,50 +117,68 @@ L1 top
   L2 after range
 {{ end }}
 L1 bottom
-{{ end }}`);
+{{ end }}`,
+    );
   });
 
   it("functions with pipes and dotted names", () => {
-    verifyBoth("functions-and-pipes", `{{ coll.Slice "a" "b" | sort | join ", " }}
+    verifyBoth(
+      "functions-and-pipes",
+      `{{ coll.Slice "a" "b" | sort | join ", " }}
 {{ index .map "key" }}
 {{ print (len .items) }}
 {{ and .a .b .c | not }}
-{{ eq $x 42 | or (ne $y "") }}`);
+{{ eq $x 42 | or (ne $y "") }}`,
+    );
   });
 
   it("whitespace trimming variants", () => {
-    verifyBoth("whitespace-trimming", `{{- range .items -}}
+    verifyBoth(
+      "whitespace-trimming",
+      `{{- range .items -}}
   {{- .name }}
 {{- end -}}
 {{ if true -}}
   yes
 {{- else }}
   no
-{{ end }}`);
+{{ end }}`,
+    );
   });
 
   it("comments inside actions", () => {
-    verifyBoth("comments", `{{/* this is a comment */}}
+    verifyBoth(
+      "comments",
+      `{{/* this is a comment */}}
 {{ if true }}{{/* another comment */}}hello{{ end }}
-{{ range .items }}{{/* TODO: handle nil */}}{{ . }}{{ end }}`);
+{{ range .items }}{{/* TODO: handle nil */}}{{ . }}{{ end }}`,
+    );
   });
 
   it("range with index, element variable", () => {
-    verifyBoth("range-with-index-var", `{{ range $index, $element := .items }}
+    verifyBoth(
+      "range-with-index-var",
+      `{{ range $index, $element := .items }}
   #{{ $index }}: {{ $element.name }} ({{ $element.count }})
-{{ end }}`);
+{{ end }}`,
+    );
   });
 
   it("indexing arrays and maps", () => {
-    verifyBoth("indexing", `{{ index .array 0 }}
+    verifyBoth(
+      "indexing",
+      `{{ index .array 0 }}
 {{ index .map "foo-bar" }}
 {{ index .nested "a" (print "b") "c" }}
 {{ .map.foo }}
-{{ $.rootKey }}`);
+{{ $.rootKey }}`,
+    );
   });
 
   it("rich text between actions", () => {
-    verifyBoth("rich-text-between", `# {{ .title }}
+    verifyBoth(
+      "rich-text-between",
+      `# {{ .title }}
 
 {{ .intro }}
 
@@ -153,11 +191,14 @@ L1 bottom
 ## Config
 {{ with .config }}
 host={{ .host }}  port={{ .port }}
-{{ end }}`);
+{{ end }}`,
+    );
   });
 
   it("SQL with nested filters", () => {
-    verifyBoth("sql-template", `SELECT
+    verifyBoth(
+      "sql-template",
+      `SELECT
   {{ range $i, $c := .cols }}{{ if $i }}, {{ end }}"{{ $c }}"{{ end }}
 FROM {{ .table }}
 WHERE 1=1
@@ -166,11 +207,14 @@ WHERE 1=1
     {{ range $j, $v := .vals }}{{ if $j }}, {{ end }}{{ $v }}{{ end }}
   ){{ else }}{{ .val }}{{ end }}
 {{ end }}
-LIMIT {{ .limit }}`);
+LIMIT {{ .limit }}`,
+    );
   });
 
   it("HTML with mixed nesting", () => {
-    verifyBoth("html-template", `<html>
+    verifyBoth(
+      "html-template",
+      `<html>
 <body>
   {{ block "header" . }}<h1>{{ .site }}</h1>{{ end }}
   {{ if .posts }}
@@ -183,6 +227,7 @@ LIMIT {{ .limit }}`);
   </ul>
   {{ else }}<p>None.</p>{{ end }}
 </body>
-</html>`);
+</html>`,
+    );
   });
 });
