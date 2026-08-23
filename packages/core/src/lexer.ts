@@ -41,6 +41,7 @@ export function tokenize(source: string): Token[] {
   const len = source.length;
   let pos = 0;
   let nestingLevel = 0;
+  let lastKeyword: string | null = null;
 
   function push(type: TokenType, start: number, end: number): void {
     tokens.push({ type, start, end, nestingLevel });
@@ -101,6 +102,7 @@ export function tokenize(source: string): Token[] {
    * `pos` is just past the opening delimiter.
    */
   function scanAction(_endDelim: string): void {
+    lastKeyword = null;
     // Check for comment first
     if (peek() === "/" && peek(1) === "*") {
       scanComment();
@@ -140,10 +142,14 @@ export function tokenize(source: string): Token[] {
         continue;
       }
 
-      // Dot (context) — must not be followed by an ident char
-      if (ch === "." && !isIdentPart(peek(1))) {
-        push(TokenType.Dot, pos, pos + 1);
-        advance();
+      // Dot: bare context dot (`.`) or field access (`.name`, `.map.foo`).
+      if (ch === ".") {
+        if (isIdentStart(peek(1))) {
+          scanField();
+        } else {
+          push(TokenType.Dot, pos, pos + 1);
+          advance();
+        }
         continue;
       }
 
@@ -241,6 +247,14 @@ export function tokenize(source: string): Token[] {
     }
   }
 
+  function scanField(): void {
+    const start = pos;
+    advance(); // leading `.`
+    // Field access may itself be dotted: `.a.b.c`
+    consumeWhile(isIdentPart);
+    push(TokenType.Field, start, pos);
+  }
+
   function scanNumber(): void {
     const start = pos;
     consumeWhile((ch) => /[0-9.]/.test(ch));
@@ -266,10 +280,13 @@ export function tokenize(source: string): Token[] {
     const word = source.slice(start, pos);
 
     if (KEYWORDS.has(word)) {
+      // `else if` continues the same block; it must not open a new level.
+      const opensBlock =
+        BLOCK_START.has(word) && !(word === "if" && lastKeyword === "else");
       if (word === "end") {
         push(TokenType.Keyword, start, pos);
         nestingLevel = Math.max(0, nestingLevel - 1);
-      } else if (BLOCK_START.has(word)) {
+      } else if (opensBlock) {
         // Increment nesting *before* pushing so if/else/end share the same level
         nestingLevel += 1;
         push(TokenType.Keyword, start, pos);
@@ -277,6 +294,7 @@ export function tokenize(source: string): Token[] {
         // `else`, `template` — no nesting change
         push(TokenType.Keyword, start, pos);
       }
+      lastKeyword = word;
     } else {
       // It's a function call
       push(TokenType.Function, start, pos);

@@ -34,6 +34,9 @@ export enum TokenType {
   /** The context dot `.`. */
   Dot = "Dot",
 
+  /** Field access on the context dot: `.name`, `.map.foo`. */
+  Field = "Field",
+
   /** A double-quoted or backtick-quoted string literal. */
   String = "String",
 

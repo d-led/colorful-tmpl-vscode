@@ -14,10 +14,11 @@ export const PALETTES = {
       "rgba(255, 255, 150, 0.14)", // yellow
       "rgba(255, 182, 193, 0.14)", // pink
     ],
-    ctrlFlow: "rgba(135, 206, 250, 0.28)", // light blue
-    varWrite: "rgba(204, 170, 50, 0.38)", // ochre
-    varRead: "rgba(204, 170, 50, 0.28)", // ochre lighter
-    func: "rgba(255, 165, 70, 0.32)", // light orange
+    varDef: "rgba(144, 238, 144, 0.40)", // green: $x :=
+    varAssign: "rgba(255, 183, 77, 0.45)", // orange: $x =
+    varUse: "rgba(130, 170, 255, 0.45)", // blue: $x / .field
+    func: "rgba(198, 160, 246, 0.45)", // violet: print / coll.Slice
+    pipe: "rgba(128, 222, 234, 0.50)", // cyan: |
     comment: "rgba(140, 140, 140, 0.20)", // grey
   },
   light: {
@@ -31,11 +32,12 @@ export const PALETTES = {
       "rgba(255, 255, 150, 0.30)", // yellow
       "rgba(255, 182, 193, 0.30)", // pink
     ],
-    ctrlFlow: "rgba(135, 206, 250, 0.45)",
-    varWrite: "rgba(190, 160, 50, 0.32)",
-    varRead: "rgba(190, 160, 50, 0.22)",
-    func: "rgba(255, 150, 50, 0.28)",
-    comment: "rgba(160, 160, 160, 0.18)",
+    varDef: "rgba(46, 160, 67, 0.22)", // green
+    varAssign: "rgba(230, 126, 34, 0.28)", // orange
+    varUse: "rgba(33, 102, 172, 0.22)", // blue
+    func: "rgba(124, 77, 255, 0.20)", // violet
+    pipe: "rgba(0, 131, 143, 0.24)", // cyan
+    comment: "rgba(160, 160, 160, 0.18)", // grey
   },
 };
 
@@ -159,9 +161,12 @@ export function renderColoredHtml(
     }
   }
 
-  // ---- Step 4: find {{ }} blocks and classify their semantic type ----
-  // Each block gets ONE color covering the full {{...}} range (including spaces).
-  const blockColor: (string | null)[] = new Array(source.length).fill(null);
+  // ---- Step 4: semantic coloring ----
+  // Control-flow actions and comments get a whole-block color; variables,
+  // function names, pipes, and field access get their own color on top.
+  const semanticBg: (string | null)[] = new Array(source.length).fill(null);
+
+  // Whole-block pass: comments + control-flow level chips.
   let i = 0;
   while (i < tokens.length) {
     if (tokens[i].type !== TokenType.DelimOpen) {
@@ -170,48 +175,60 @@ export function renderColoredHtml(
     }
     const blockStart = tokens[i].start;
     i++;
-    let hasCtrl = false,
-      hasVarWrite = false,
-      hasVarRead = false,
-      hasFunc = false,
-      hasComment = false,
-      hasDot = false;
+    let ctrlLevel = 0;
+    let hasCtrl = false;
+    let hasComment = false;
     while (i < tokens.length && tokens[i].type !== TokenType.DelimClose) {
       const t = tokens[i];
-      if (t.type === TokenType.Keyword) hasCtrl = true;
-      else if (
-        t.type === TokenType.VariableDef ||
-        t.type === TokenType.VariableAssign
-      )
-        hasVarWrite = true;
-      else if (t.type === TokenType.VariableUse) hasVarRead = true;
-      else if (t.type === TokenType.Function) hasFunc = true;
-      else if (t.type === TokenType.Comment) hasComment = true;
-      else if (t.type === TokenType.Dot) hasDot = true;
+      if (t.type === TokenType.Keyword) {
+        if (!hasCtrl) ctrlLevel = t.nestingLevel;
+        hasCtrl = true;
+      } else if (t.type === TokenType.Comment) {
+        hasComment = true;
+      }
       i++;
     }
     if (i < tokens.length) {
       const blockEnd = tokens[i].end;
-      // dot-access (e.g. {{ .name }}) is a variable read, not a function call
-      const isVarRead = hasVarRead || hasDot;
       const color = hasComment
         ? P.comment
         : hasCtrl
-          ? P.ctrlFlow
-          : hasVarWrite
-            ? P.varWrite
-            : isVarRead
-              ? P.varRead
-              : hasFunc
-                ? P.func
-                : null;
+          ? PALETTE[ctrlLevel % PALETTE.length]
+          : null;
       if (color) {
-        for (let j = blockStart; j < blockEnd; j++) blockColor[j] = color;
+        for (let k = blockStart; k < blockEnd; k++) semanticBg[k] = color;
       }
-      // Also color any tokens between DelimOpen and DelimClose that are inside
-      // (already covered by the range fill above)
     }
     i++;
+  }
+
+  // Token pass: variables, field access, function names, and pipes.
+  for (const t of tokens) {
+    let color: string | null = null;
+    switch (t.type) {
+      case TokenType.VariableDef:
+        color = P.varDef;
+        break;
+      case TokenType.VariableAssign:
+        color = P.varAssign;
+        break;
+      case TokenType.VariableUse:
+      case TokenType.Dot:
+      case TokenType.Field:
+        color = P.varUse;
+        break;
+      case TokenType.Function:
+        color = P.func;
+        break;
+      case TokenType.Pipe:
+        color = P.pipe;
+        break;
+      default:
+        break;
+    }
+    if (color) {
+      for (let k = t.start; k < t.end; k++) semanticBg[k] = color;
+    }
   }
 
   // ---- Step 5: build HTML ----
@@ -226,10 +243,10 @@ export function renderColoredHtml(
   let pos = 0;
   while (pos < source.length) {
     const nb = nestingBg[pos];
-    const bc = blockColor[pos];
+    const bc = semanticBg[pos];
 
     let j = pos;
-    while (j < source.length && nestingBg[j] === nb && blockColor[j] === bc)
+    while (j < source.length && nestingBg[j] === nb && semanticBg[j] === bc)
       j++;
 
     const raw = source.slice(pos, j);

@@ -52,10 +52,11 @@ function subtractRanges(parents: Span[], children: Span[]): Span[] {
 
 export class NestingDecorator {
   private levelDecorations = new Map<number, vscode.TextEditorDecorationType>();
-  private ctrlFlowDeco!: vscode.TextEditorDecorationType;
-  private varWriteDeco!: vscode.TextEditorDecorationType;
-  private varReadDeco!: vscode.TextEditorDecorationType;
+  private varDefDeco!: vscode.TextEditorDecorationType;
+  private varAssignDeco!: vscode.TextEditorDecorationType;
+  private varUseDeco!: vscode.TextEditorDecorationType;
   private funcDeco!: vscode.TextEditorDecorationType;
+  private pipeDeco!: vscode.TextEditorDecorationType;
   private commentDeco!: vscode.TextEditorDecorationType;
   private timeout: ReturnType<typeof setTimeout> | undefined;
   private disposables: vscode.Disposable[] = [];
@@ -66,10 +67,11 @@ export class NestingDecorator {
 
   private rebuildDecorations(): void {
     for (const d of this.levelDecorations.values()) d.dispose();
-    this.ctrlFlowDeco?.dispose();
-    this.varWriteDeco?.dispose();
-    this.varReadDeco?.dispose();
+    this.varDefDeco?.dispose();
+    this.varAssignDeco?.dispose();
+    this.varUseDeco?.dispose();
     this.funcDeco?.dispose();
+    this.pipeDeco?.dispose();
     this.commentDeco?.dispose();
     this.levelDecorations.clear();
 
@@ -77,12 +79,11 @@ export class NestingDecorator {
     const palette: string[] = vscode.workspace
       .getConfiguration(CFG)
       .get("palette", light ? PALETTES.light : PALETTES.dark);
-    const ctrlFlow = light
-      ? "rgba(135,206,250,0.45)"
-      : "rgba(135,206,250,0.28)";
-    const varWrite = light ? "rgba(190,160,50,0.32)" : "rgba(204,170,50,0.38)";
-    const varRead = light ? "rgba(190,160,50,0.22)" : "rgba(204,170,50,0.28)";
-    const func = light ? "rgba(255,150,50,0.28)" : "rgba(255,165,70,0.32)";
+    const varDef = light ? "rgba(46,160,67,0.22)" : "rgba(144,238,144,0.40)";
+    const varAssign = light ? "rgba(230,126,34,0.28)" : "rgba(255,183,77,0.45)";
+    const varUse = light ? "rgba(33,102,172,0.22)" : "rgba(130,170,255,0.45)";
+    const func = light ? "rgba(124,77,255,0.20)" : "rgba(198,160,246,0.45)";
+    const pipe = light ? "rgba(0,131,143,0.24)" : "rgba(128,222,234,0.50)";
     const comment = light ? "rgba(160,160,160,0.18)" : "rgba(140,140,140,0.20)";
 
     const mk = (bg: string) =>
@@ -93,10 +94,11 @@ export class NestingDecorator {
       });
     for (let i = 0; i < palette.length; i++)
       this.levelDecorations.set(i, mk(palette[i]));
-    this.ctrlFlowDeco = mk(ctrlFlow);
-    this.varWriteDeco = mk(varWrite);
-    this.varReadDeco = mk(varRead);
+    this.varDefDeco = mk(varDef);
+    this.varAssignDeco = mk(varAssign);
+    this.varUseDeco = mk(varUse);
     this.funcDeco = mk(func);
+    this.pipeDeco = mk(pipe);
     this.commentDeco = mk(comment);
   }
 
@@ -215,21 +217,16 @@ export class NestingDecorator {
       }
       if (ranges.length > 0) painted.set(level, ranges);
     }
-    for (const [level, ranges] of painted) {
-      const d = this.levelDecorations.get(level % paletteSize);
-      if (d)
-        editor.setDecorations(
-          d,
-          ranges.map((r) => rng(r.start, r.end)),
-        );
-    }
-
-    // ---- block-level semantic coloring ----
-    const ctrl: vscode.Range[] = [],
-      w: vscode.Range[] = [],
-      r: vscode.Range[] = [],
+    // ---- semantic coloring: control-flow, comments, variables, functions ----
+    const vd: vscode.Range[] = [],
+      va: vscode.Range[] = [],
+      vu: vscode.Range[] = [],
       f: vscode.Range[] = [],
+      p: vscode.Range[] = [],
       c: vscode.Range[] = [];
+    const ctrlByLevel = new Map<number, vscode.Range[]>();
+
+    // Whole-block pass: comments and control-flow level chips.
     let j = 0;
     while (j < tokens.length) {
       if (tokens[j].type !== TokenType.DelimOpen) {
@@ -238,52 +235,92 @@ export class NestingDecorator {
       }
       const bs = tokens[j].start;
       j++;
-      let hasCtrl = false,
-        hasVW = false,
-        hasVR = false,
-        hasF = false,
-        hasC = false,
-        hasDot = false;
+      let ctrlLevel = 0;
+      let hasCtrl = false;
+      let hasComment = false;
       while (j < tokens.length && tokens[j].type !== TokenType.DelimClose) {
         const tt = tokens[j].type;
-        if (tt === TokenType.Keyword) hasCtrl = true;
-        else if (
-          tt === TokenType.VariableDef ||
-          tt === TokenType.VariableAssign
-        )
-          hasVW = true;
-        else if (tt === TokenType.VariableUse) hasVR = true;
-        else if (tt === TokenType.Function) hasF = true;
-        else if (tt === TokenType.Comment) hasC = true;
-        else if (tt === TokenType.Dot) hasDot = true;
+        if (tt === TokenType.Keyword) {
+          if (!hasCtrl) ctrlLevel = tokens[j].nestingLevel;
+          hasCtrl = true;
+        } else if (tt === TokenType.Comment) {
+          hasComment = true;
+        }
         j++;
       }
       if (j < tokens.length) {
         const be = tokens[j].end;
         const rr = rng(bs, be);
-        const isVR = hasVR || hasDot;
-        if (hasC) c.push(rr);
-        else if (hasCtrl) ctrl.push(rr);
-        else if (hasVW) w.push(rr);
-        else if (isVR) r.push(rr);
-        else if (hasF) f.push(rr);
+        if (hasComment) c.push(rr);
+        else if (hasCtrl) {
+          const list = ctrlByLevel.get(ctrlLevel) ?? [];
+          list.push(rr);
+          ctrlByLevel.set(ctrlLevel, list);
+        }
       }
       j++;
     }
-    editor.setDecorations(this.ctrlFlowDeco, ctrl);
-    editor.setDecorations(this.varWriteDeco, w);
-    editor.setDecorations(this.varReadDeco, r);
-    editor.setDecorations(this.funcDeco, f);
+
+    // Token pass: variables, field access, function names, and pipes.
+    for (const t of tokens) {
+      switch (t.type) {
+        case TokenType.VariableDef:
+          vd.push(rng(t.start, t.end));
+          break;
+        case TokenType.VariableAssign:
+          va.push(rng(t.start, t.end));
+          break;
+        case TokenType.VariableUse:
+        case TokenType.Dot:
+        case TokenType.Field:
+          vu.push(rng(t.start, t.end));
+          break;
+        case TokenType.Function:
+          f.push(rng(t.start, t.end));
+          break;
+        case TokenType.Pipe:
+          p.push(rng(t.start, t.end));
+          break;
+        default:
+          break;
+      }
+    }
+
+    // ---- level decorations: text backgrounds + control-flow actions ----
+    const byPaletteIndex = new Map<number, vscode.Range[]>();
+    for (const [level, spans] of painted) {
+      const idx = level % paletteSize;
+      const list = byPaletteIndex.get(idx) ?? [];
+      list.push(...spans.map((s) => rng(s.start, s.end)));
+      byPaletteIndex.set(idx, list);
+    }
+    for (const [level, ranges] of ctrlByLevel) {
+      const idx = level % paletteSize;
+      const list = byPaletteIndex.get(idx) ?? [];
+      list.push(...ranges);
+      byPaletteIndex.set(idx, list);
+    }
+    for (const [idx, ranges] of byPaletteIndex) {
+      const d = this.levelDecorations.get(idx);
+      if (d) editor.setDecorations(d, ranges);
+    }
+
     editor.setDecorations(this.commentDeco, c);
+    editor.setDecorations(this.varDefDeco, vd);
+    editor.setDecorations(this.varAssignDeco, va);
+    editor.setDecorations(this.varUseDeco, vu);
+    editor.setDecorations(this.funcDeco, f);
+    editor.setDecorations(this.pipeDeco, p);
   }
 
   private clearDecorations(editor: vscode.TextEditor): void {
     for (const d of this.levelDecorations.values())
       editor.setDecorations(d, []);
-    editor.setDecorations(this.ctrlFlowDeco, []);
-    editor.setDecorations(this.varWriteDeco, []);
-    editor.setDecorations(this.varReadDeco, []);
+    editor.setDecorations(this.varDefDeco, []);
+    editor.setDecorations(this.varAssignDeco, []);
+    editor.setDecorations(this.varUseDeco, []);
     editor.setDecorations(this.funcDeco, []);
+    editor.setDecorations(this.pipeDeco, []);
     editor.setDecorations(this.commentDeco, []);
   }
 
@@ -291,10 +328,11 @@ export class NestingDecorator {
     if (this.timeout) clearTimeout(this.timeout);
     for (const d of this.disposables) d.dispose();
     for (const d of this.levelDecorations.values()) d.dispose();
-    this.ctrlFlowDeco?.dispose();
-    this.varWriteDeco?.dispose();
-    this.varReadDeco?.dispose();
+    this.varDefDeco?.dispose();
+    this.varAssignDeco?.dispose();
+    this.varUseDeco?.dispose();
     this.funcDeco?.dispose();
+    this.pipeDeco?.dispose();
     this.commentDeco?.dispose();
   }
 }

@@ -1,5 +1,5 @@
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 150, 50, 0.28)">{{ coll.Slice "a" "b" | sort | join ", " }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ index .map "key" }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ print (len .items) }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ and .a .b .c | not }}</span>
-<span style="background:rgba(190, 160, 50, 0.22)">{{ eq $x 42 | or (ne $y "") }}</span></pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">{{ <span style="background:rgba(124, 77, 255, 0.20)">coll.Slice</span> "a" "b" <span style="background:rgba(0, 131, 143, 0.24)">|</span> <span style="background:rgba(124, 77, 255, 0.20)">sort</span> <span style="background:rgba(0, 131, 143, 0.24)">|</span> <span style="background:rgba(124, 77, 255, 0.20)">join</span> ", " }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">index</span> <span style="background:rgba(33, 102, 172, 0.22)">.map</span> "key" }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">print</span> (<span style="background:rgba(124, 77, 255, 0.20)">len</span> <span style="background:rgba(33, 102, 172, 0.22)">.items</span>) }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">and</span> <span style="background:rgba(33, 102, 172, 0.22)">.a</span> <span style="background:rgba(33, 102, 172, 0.22)">.b</span> <span style="background:rgba(33, 102, 172, 0.22)">.c</span> <span style="background:rgba(0, 131, 143, 0.24)">|</span> <span style="background:rgba(124, 77, 255, 0.20)">not</span> }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">eq</span> <span style="background:rgba(33, 102, 172, 0.22)">$x</span> 42 <span style="background:rgba(0, 131, 143, 0.24)">|</span> <span style="background:rgba(124, 77, 255, 0.20)">or</span> (<span style="background:rgba(124, 77, 255, 0.20)">ne</span> <span style="background:rgba(33, 102, 172, 0.22)">$y</span> "") }}</pre>

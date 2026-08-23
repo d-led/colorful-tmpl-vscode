@@ -13,173 +13,224 @@
 <body>
 <h1>Approved Snapshots</h1>
 <h2>adjacent-actions</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 150, 50, 0.28)">{{ a }}{{ b }}</span></pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">{{ <span style="background:rgba(124, 77, 255, 0.20)">a</span> }}{{ <span style="background:rgba(124, 77, 255, 0.20)">b</span> }}</pre>
 
 <hr>
 <h2>comments</h2>
 <pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(160, 160, 160, 0.18)">{{/* this is a comment */}}</span>
-<span style="background:rgba(135, 206, 250, 0.45)">{{ if true }}</span><span style="background:rgba(160, 160, 160, 0.18)">{{/* another comment */}}</span><span style="background:rgba(144, 238, 144, 0.30)">hello</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
-<span style="background:rgba(135, 206, 250, 0.45)">{{ range .items }}</span><span style="background:rgba(160, 160, 160, 0.18)">{{/* TODO: handle nil */}}</span><span style="background:rgba(190, 160, 50, 0.22)">{{ . }}</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+<span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(124, 77, 255, 0.20)">true</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(160, 160, 160, 0.18)">{{/* another comment */}}</span><span style="background:rgba(144, 238, 144, 0.30)">hello</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span>
+<span style="background:rgba(144, 238, 144, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.items</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(160, 160, 160, 0.18)">{{/* TODO: handle nil */}}</span>{{ <span style="background:rgba(33, 102, 172, 0.22)">.</span> }}<span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>double-nesting</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ if .show }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .items }}</span><span style="background:rgba(255, 218, 185, 0.35)">
-  - </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.show</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.items</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  - {{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
+
+<hr>
+<h2>else-if-chain</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Case1</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+Case1
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{ else if </span></span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.Case2</span></span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)"> }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+Case2
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{ else if </span></span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.Case3</span></span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)"> }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+Case3
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+Other
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>four-level-nesting</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ define "T1" }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ define "T1" }}</span><span style="background:rgba(144, 238, 144, 0.30)">
 L1 top
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .show }}</span><span style="background:rgba(255, 218, 185, 0.35)">
-  L2 </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $x := 1 }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
-  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .items }}</span><span style="background:rgba(221, 160, 221, 0.30)">
-    L3 </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(221, 160, 221, 0.30)">
-    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ with .sub }}</span><span style="background:rgba(255, 255, 150, 0.30)">
-      L4 </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .deep }}</span></span><span style="background:rgba(255, 255, 150, 0.30)"> </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ print $x }}</span></span><span style="background:rgba(255, 255, 150, 0.30)">
-    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">
-    L3 after with </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(221, 160, 221, 0.30)">
-  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.show</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  L2 {{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(46, 160, 67, 0.22)">$x</span></span><span style="background:rgba(255, 218, 185, 0.35)"> := 1 }}
+  </span><span style="background:rgba(221, 160, 221, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.items</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+    L3 {{ </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(221, 160, 221, 0.30)"> }}
+    </span><span style="background:rgba(255, 255, 150, 0.30)">{{ with </span><span style="background:rgba(33, 102, 172, 0.22)">.sub</span><span style="background:rgba(255, 255, 150, 0.30)"> }}</span><span style="background:rgba(255, 255, 150, 0.30)">
+      L4 {{ </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.deep</span></span><span style="background:rgba(255, 255, 150, 0.30)"> }} {{ </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(124, 77, 255, 0.20)">print</span></span><span style="background:rgba(255, 255, 150, 0.30)"> </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">$x</span></span><span style="background:rgba(255, 255, 150, 0.30)"> }}
+    </span><span style="background:rgba(255, 255, 150, 0.30)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+    L3 after with {{ </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(221, 160, 221, 0.30)"> }}
+  </span><span style="background:rgba(221, 160, 221, 0.30)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
   L2 after range
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
 L1 bottom
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
+
+<hr>
+<h2>four-level-packed</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ define "Tmpl" }}</span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(255, 255, 150, 0.30)">{{ with </span><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span><span style="background:rgba(255, 255, 150, 0.30)"> }}</span><span style="background:rgba(255, 255, 150, 0.30)">Leaf</span><span style="background:rgba(255, 255, 150, 0.30)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>functions-and-pipes</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 150, 50, 0.28)">{{ coll.Slice "a" "b" | sort | join ", " }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ index .map "key" }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ print (len .items) }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ and .a .b .c | not }}</span>
-<span style="background:rgba(190, 160, 50, 0.22)">{{ eq $x 42 | or (ne $y "") }}</span></pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">{{ <span style="background:rgba(124, 77, 255, 0.20)">coll.Slice</span> "a" "b" <span style="background:rgba(0, 131, 143, 0.24)">|</span> <span style="background:rgba(124, 77, 255, 0.20)">sort</span> <span style="background:rgba(0, 131, 143, 0.24)">|</span> <span style="background:rgba(124, 77, 255, 0.20)">join</span> ", " }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">index</span> <span style="background:rgba(33, 102, 172, 0.22)">.map</span> "key" }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">print</span> (<span style="background:rgba(124, 77, 255, 0.20)">len</span> <span style="background:rgba(33, 102, 172, 0.22)">.items</span>) }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">and</span> <span style="background:rgba(33, 102, 172, 0.22)">.a</span> <span style="background:rgba(33, 102, 172, 0.22)">.b</span> <span style="background:rgba(33, 102, 172, 0.22)">.c</span> <span style="background:rgba(0, 131, 143, 0.24)">|</span> <span style="background:rgba(124, 77, 255, 0.20)">not</span> }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">eq</span> <span style="background:rgba(33, 102, 172, 0.22)">$x</span> 42 <span style="background:rgba(0, 131, 143, 0.24)">|</span> <span style="background:rgba(124, 77, 255, 0.20)">or</span> (<span style="background:rgba(124, 77, 255, 0.20)">ne</span> <span style="background:rgba(33, 102, 172, 0.22)">$y</span> "") }}</pre>
 
 <hr>
 <h2>gomplate-pipeline</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{- range .items }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-  Task: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-  Status: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .status | upper }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-  Due: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .due | date "2006-01-02" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .urgent }}</span><span style="background:rgba(255, 218, 185, 0.35)">⚠️ URGENT</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-  </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .notes | default "—" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{- end }}</span></pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{- range </span><span style="background:rgba(33, 102, 172, 0.22)">.items</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  Task: {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+  Status: {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.status</span></span><span style="background:rgba(144, 238, 144, 0.30)"> </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(0, 131, 143, 0.24)">|</span></span><span style="background:rgba(144, 238, 144, 0.30)"> </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(124, 77, 255, 0.20)">upper</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+  Due: {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.due</span></span><span style="background:rgba(144, 238, 144, 0.30)"> </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(0, 131, 143, 0.24)">|</span></span><span style="background:rgba(144, 238, 144, 0.30)"> </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(124, 77, 255, 0.20)">date</span></span><span style="background:rgba(144, 238, 144, 0.30)"> "2006-01-02" }}
+  </span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.urgent</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">⚠️ URGENT</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.notes</span></span><span style="background:rgba(144, 238, 144, 0.30)"> </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(0, 131, 143, 0.24)">|</span></span><span style="background:rgba(144, 238, 144, 0.30)"> </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(124, 77, 255, 0.20)">default</span></span><span style="background:rgba(144, 238, 144, 0.30)"> "—" }}
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{- end }}</span></pre>
 
 <hr>
 <h2>html-template</h2>
 <pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">&lt;html&gt;
 &lt;body&gt;
-  <span style="background:rgba(135, 206, 250, 0.45)">{{ block "header" . }}</span><span style="background:rgba(144, 238, 144, 0.30)">&lt;h1&gt;</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .site }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">&lt;/h1&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
-  <span style="background:rgba(135, 206, 250, 0.45)">{{ if .posts }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  <span style="background:rgba(144, 238, 144, 0.30)">{{ block "header" </span><span style="background:rgba(33, 102, 172, 0.22)">.</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">&lt;h1&gt;{{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.site</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}&lt;/h1&gt;</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span>
+  <span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.posts</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
   &lt;ul&gt;
-  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .posts }}</span><span style="background:rgba(255, 218, 185, 0.35)">
-    &lt;li&gt;&lt;h2&gt;</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .title }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">&lt;/h2&gt;
-    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .tags }}</span><span style="background:rgba(221, 160, 221, 0.30)">&lt;span&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .tags }}</span><span style="background:rgba(255, 255, 150, 0.30)">#</span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ . }}</span></span><span style="background:rgba(255, 255, 150, 0.30)"> </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">&lt;/span&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  </span><span style="background:rgba(255, 218, 185, 0.35)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.posts</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+    &lt;li&gt;&lt;h2&gt;{{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.title</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}&lt;/h2&gt;
+    </span><span style="background:rgba(221, 160, 221, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.tags</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">&lt;span&gt;</span><span style="background:rgba(255, 255, 150, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.tags</span><span style="background:rgba(255, 255, 150, 0.30)"> }}</span><span style="background:rgba(255, 255, 150, 0.30)">#{{ </span><span style="background:rgba(255, 255, 150, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.</span></span><span style="background:rgba(255, 255, 150, 0.30)"> }} </span><span style="background:rgba(255, 255, 150, 0.30)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.30)">&lt;/span&gt;</span><span style="background:rgba(221, 160, 221, 0.30)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
     &lt;/li&gt;
-  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  </span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
   &lt;/ul&gt;
-  </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">&lt;p&gt;None.&lt;/p&gt;</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+  </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">&lt;p&gt;None.&lt;/p&gt;</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span>
 &lt;/body&gt;
 &lt;/html&gt;</pre>
 
 <hr>
 <h2>indexing</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(255, 150, 50, 0.28)">{{ index .array 0 }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ index .map "foo-bar" }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ index .nested "a" (print "b") "c" }}</span>
-<span style="background:rgba(255, 150, 50, 0.28)">{{ .map.foo }}</span>
-<span style="background:rgba(190, 160, 50, 0.22)">{{ $.rootKey }}</span></pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">{{ <span style="background:rgba(124, 77, 255, 0.20)">index</span> <span style="background:rgba(33, 102, 172, 0.22)">.array</span> 0 }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">index</span> <span style="background:rgba(33, 102, 172, 0.22)">.map</span> "foo-bar" }}
+{{ <span style="background:rgba(124, 77, 255, 0.20)">index</span> <span style="background:rgba(33, 102, 172, 0.22)">.nested</span> "a" (<span style="background:rgba(124, 77, 255, 0.20)">print</span> "b") "c" }}
+{{ <span style="background:rgba(33, 102, 172, 0.22)">.map.foo</span> }}
+{{ <span style="background:rgba(33, 102, 172, 0.22)">$.rootKey</span> }}</pre>
+
+<hr>
+<h2>nested-if</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+Level1 {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+Level2 {{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}
+</span><span style="background:rgba(221, 160, 221, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+Level3 {{ </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span></span><span style="background:rgba(221, 160, 221, 0.30)"> }}
+</span><span style="background:rgba(221, 160, 221, 0.30)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
+
+<hr>
+<h2>nested-if-packed</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">Level3</span><span style="background:rgba(221, 160, 221, 0.30)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>no-nesting</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">Hello, <span style="background:rgba(255, 150, 50, 0.28)">{{ print "World" }}</span>!</pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">Hello, {{ <span style="background:rgba(124, 77, 255, 0.20)">print</span> "World" }}!</pre>
+
+<hr>
+<h2>packed-range-in-if</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span>{{ <span style="background:rgba(33, 102, 172, 0.22)">.Level3</span> }}<span style="background:rgba(221, 160, 221, 0.30)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>range-with-index-var</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ range $index, $element := .items }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-  #</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ $index }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ $element.name }}</span></span><span style="background:rgba(144, 238, 144, 0.30)"> (</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ $element.count }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">)
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">$index</span><span style="background:rgba(144, 238, 144, 0.30)">, </span><span style="background:rgba(46, 160, 67, 0.22)">$element</span><span style="background:rgba(144, 238, 144, 0.30)"> := </span><span style="background:rgba(33, 102, 172, 0.22)">.items</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  #{{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">$index</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}: {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">$element.name</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }} ({{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">$element.count</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }})
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>rich-text-between</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"># <span style="background:rgba(255, 150, 50, 0.28)">{{ .title }}</span>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"># {{ <span style="background:rgba(33, 102, 172, 0.22)">.title</span> }}
 
-<span style="background:rgba(255, 150, 50, 0.28)">{{ .intro }}</span>
+{{ <span style="background:rgba(33, 102, 172, 0.22)">.intro</span> }}
 
 ## Features
-<span style="background:rgba(135, 206, 250, 0.45)">{{ range .features }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-- **</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">**: </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .description }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if .experimental }}</span><span style="background:rgba(255, 218, 185, 0.35)">⚠️ </span><span style="background:rgba(255, 150, 50, 0.28)">{{ .note }}</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
+<span style="background:rgba(144, 238, 144, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.features</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+- **{{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}**: {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.description</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+  </span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.experimental</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">⚠️ </span>{{ <span style="background:rgba(33, 102, 172, 0.22)">.note</span> }}<span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span>
 
 ## Config
-<span style="background:rgba(135, 206, 250, 0.45)">{{ with .config }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-host=</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .host }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">  port=</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .port }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+<span style="background:rgba(144, 238, 144, 0.30)">{{ with </span><span style="background:rgba(33, 102, 172, 0.22)">.config</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+host={{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.host</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}  port={{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.port</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>single-level-if-else</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ if true }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(124, 77, 255, 0.20)">true</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
 the truth
-</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
 not truth
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>sql-template</h2>
 <pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">SELECT
-  <span style="background:rgba(135, 206, 250, 0.45)">{{ range $i, $c := .cols }}{{ if $i }}</span><span style="background:rgba(255, 218, 185, 0.35)">, </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">"</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.22)">{{ $c }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">"</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
-FROM <span style="background:rgba(255, 150, 50, 0.28)">{{ .table }}</span>
+  <span style="background:rgba(144, 238, 144, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">$i</span><span style="background:rgba(144, 238, 144, 0.30)">, </span><span style="background:rgba(46, 160, 67, 0.22)">$c</span><span style="background:rgba(144, 238, 144, 0.30)"> := </span><span style="background:rgba(33, 102, 172, 0.22)">.cols</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">$i</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">, </span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">"{{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">$c</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}"</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span>
+FROM {{ <span style="background:rgba(33, 102, 172, 0.22)">.table</span> }}
 WHERE 1=1
-<span style="background:rgba(135, 206, 250, 0.45)">{{ range .filters }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-  AND "</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .col }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">" </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .op }}</span></span><span style="background:rgba(144, 238, 144, 0.30)"> </span><span style="background:rgba(135, 206, 250, 0.45)">{{ if eq .op "IN" }}</span><span style="background:rgba(255, 218, 185, 0.35)">(
-    </span><span style="background:rgba(135, 206, 250, 0.45)">{{ range $j, $v := .vals }}{{ if $j }}</span><span style="background:rgba(255, 255, 150, 0.30)">, </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(190, 160, 50, 0.22)">{{ $v }}</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
-  )</span><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span><span style="background:rgba(255, 150, 50, 0.28)">{{ .val }}</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
-LIMIT <span style="background:rgba(255, 150, 50, 0.28)">{{ .limit }}</span></pre>
+<span style="background:rgba(144, 238, 144, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.filters</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  AND "{{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.col</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}" {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.op</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }} </span><span style="background:rgba(255, 218, 185, 0.35)">{{ if </span><span style="background:rgba(124, 77, 255, 0.20)">eq</span><span style="background:rgba(255, 218, 185, 0.35)"> </span><span style="background:rgba(33, 102, 172, 0.22)">.op</span><span style="background:rgba(255, 218, 185, 0.35)"> "IN" }}</span><span style="background:rgba(255, 218, 185, 0.35)">(
+    </span><span style="background:rgba(221, 160, 221, 0.30)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">$j</span><span style="background:rgba(221, 160, 221, 0.30)">, </span><span style="background:rgba(46, 160, 67, 0.22)">$v</span><span style="background:rgba(221, 160, 221, 0.30)"> := </span><span style="background:rgba(33, 102, 172, 0.22)">.vals</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(255, 255, 150, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">$j</span><span style="background:rgba(255, 255, 150, 0.30)"> }}</span><span style="background:rgba(255, 255, 150, 0.30)">, </span><span style="background:rgba(255, 255, 150, 0.30)">{{ end }}</span>{{ <span style="background:rgba(33, 102, 172, 0.22)">$v</span> }}<span style="background:rgba(221, 160, 221, 0.30)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  )</span><span style="background:rgba(255, 218, 185, 0.35)">{{ else }}</span>{{ <span style="background:rgba(33, 102, 172, 0.22)">.val</span> }}<span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span>
+LIMIT {{ <span style="background:rgba(33, 102, 172, 0.22)">.limit</span> }}</pre>
 
 <hr>
 <h2>text-in-else-block</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{- if .inputMap }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-        pipe_in = { </span><span style="background:rgba(135, 206, 250, 0.45)">{{- range .inputMap }}</span><span style="background:rgba(255, 218, 185, 0.35)">"</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .to }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">": pipe_out.get("</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .from }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">"), </span><span style="background:rgba(135, 206, 250, 0.45)">{{- end}}</span><span style="background:rgba(144, 238, 144, 0.30)"> }
-</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{- else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{- if </span><span style="background:rgba(33, 102, 172, 0.22)">.inputMap</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+        pipe_in = { </span><span style="background:rgba(255, 218, 185, 0.35)">{{- range </span><span style="background:rgba(33, 102, 172, 0.22)">.inputMap</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">"{{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.to</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}": pipe_out.get("{{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.from</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}"), </span><span style="background:rgba(255, 218, 185, 0.35)">{{- end}}</span><span style="background:rgba(144, 238, 144, 0.30)"> }
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{- else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
         pipe_in = pipe_out
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{- end }}</span></pre>
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{- end }}</span></pre>
+
+<hr>
+<h2>trimmed-nesting</h2>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{- range </span><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+        Outer text {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{- if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+        Middle text {{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}
+        </span><span style="background:rgba(221, 160, 221, 0.30)">{{- range </span><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+        "{{ </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span></span><span style="background:rgba(221, 160, 221, 0.30)"> }}"
+        </span><span style="background:rgba(221, 160, 221, 0.30)">{{- end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 218, 185, 0.35)">{{- else }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
+        Alt text
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{- end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{- end }}</span>
+        Trailing text</pre>
 
 <hr>
 <h2>triple-nesting</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ if .enabled }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.enabled</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
 outer
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .groups }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.groups</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">
   middle
-  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ with .item }}</span><span style="background:rgba(221, 160, 221, 0.30)">
-    inner </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .value }}</span></span><span style="background:rgba(221, 160, 221, 0.30)">
-  </span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
-  </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  </span><span style="background:rgba(221, 160, 221, 0.30)">{{ with </span><span style="background:rgba(33, 102, 172, 0.22)">.item</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+    inner {{ </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.value</span></span><span style="background:rgba(221, 160, 221, 0.30)"> }}
+  </span><span style="background:rgba(221, 160, 221, 0.30)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  {{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
 trailing
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 <h2>variables</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w := "" }}</span>
-<span style="background:rgba(135, 206, 250, 0.45)">{{ if 1 }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w = "world" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(190, 160, 50, 0.32)">{{ $w = "earth" }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span>
-Hello, <span style="background:rgba(190, 160, 50, 0.22)">{{ print $w }}</span>!</pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0">{{ <span style="background:rgba(46, 160, 67, 0.22)">$w</span> := "" }}
+<span style="background:rgba(144, 238, 144, 0.30)">{{ if 1 }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+{{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(230, 126, 34, 0.28)">$w</span></span><span style="background:rgba(144, 238, 144, 0.30)"> = "world" }}
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+{{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(230, 126, 34, 0.28)">$w</span></span><span style="background:rgba(144, 238, 144, 0.30)"> = "earth" }}
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span>
+Hello, {{ <span style="background:rgba(124, 77, 255, 0.20)">print</span> <span style="background:rgba(33, 102, 172, 0.22)">$w</span> }}!</pre>
 
 <hr>
 <h2>whitespace-trimming</h2>
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{- range .items -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
-  </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(255, 150, 50, 0.28)">{{- .name }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{- end -}}</span>
-<span style="background:rgba(135, 206, 250, 0.45)">{{ if true -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{- range </span><span style="background:rgba(33, 102, 172, 0.22)">.items</span><span style="background:rgba(144, 238, 144, 0.30)"> -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  {{- </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{- end -}}</span>
+<span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(124, 77, 255, 0.20)">true</span><span style="background:rgba(144, 238, 144, 0.30)"> -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
   yes
-</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(135, 206, 250, 0.45)">{{- else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{- else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
   no
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
 
 <hr>
 </body>

@@ -1,0 +1,12 @@
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{- range </span><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+        Outer text {{ </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.Level1</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{- if </span><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+        Middle text {{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.Level2</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}
+        </span><span style="background:rgba(221, 160, 221, 0.30)">{{- range </span><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span><span style="background:rgba(221, 160, 221, 0.30)"> }}</span><span style="background:rgba(221, 160, 221, 0.30)">
+        "{{ </span><span style="background:rgba(221, 160, 221, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.Level3</span></span><span style="background:rgba(221, 160, 221, 0.30)"> }}"
+        </span><span style="background:rgba(221, 160, 221, 0.30)">{{- end }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+</span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 218, 185, 0.35)">{{- else }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
+        Alt text
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{- end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{- end }}</span>
+        Trailing text</pre>

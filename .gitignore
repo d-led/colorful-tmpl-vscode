@@ -271,5 +271,4 @@ test-results/
 packages/core/src/*.received.txt
 packages/core/src/*.received.html
 packages/core/src/approved.html
-.approval_tests_temp/.approved_files.log
-.approval_tests_temp/.failed_comparison.log
+.approval_tests_temp/

@@ -53,6 +53,20 @@ describe("tokenize: dot (context)", () => {
     const result = tokenize("{{ . }}");
     expect(result[1]).toMatchObject({ type: TokenType.Dot, start: 3, end: 4 });
   });
+
+  it("tokenizes .field access as Field, not a function", () => {
+    const result = tokenize("{{ .name }}");
+    const fields = result.filter((t) => t.type === TokenType.Field);
+    expect(fields).toHaveLength(1);
+    expect(fields[0]).toMatchObject({ start: 3, end: 8 });
+  });
+
+  it("tokenizes dotted field access as a single Field", () => {
+    const result = tokenize("{{ .map.foo }}");
+    const fields = result.filter((t) => t.type === TokenType.Field);
+    expect(fields).toHaveLength(1);
+    expect(fields[0]).toMatchObject({ start: 3, end: 11 });
+  });
 });
 
 describe("tokenize: strings", () => {
@@ -165,6 +179,15 @@ describe("tokenize: keywords and nesting", () => {
     const keywords = result.filter((t) => t.type === TokenType.Keyword);
     // if, else, end — all 3 should be at the same nesting level
     expect(keywords).toHaveLength(3);
+    const levels = new Set(keywords.map((kw) => kw.nestingLevel));
+    expect(levels.size).toBe(1);
+  });
+
+  it("keeps else if at the same nesting level as its if", () => {
+    const result = tokenize("{{ if true }}a{{ else if false }}b{{ end }}");
+    const keywords = result.filter((t) => t.type === TokenType.Keyword);
+    // if, else, if, end — all 4 should share a single nesting level
+    expect(keywords).toHaveLength(4);
     const levels = new Set(keywords.map((kw) => kw.nestingLevel));
     expect(levels.size).toBe(1);
   });

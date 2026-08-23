@@ -1,0 +1,9 @@
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.14)">{{ if </span><span style="background:rgba(130, 170, 255, 0.45)">.Case1</span><span style="background:rgba(144, 238, 144, 0.14)"> }}</span><span style="background:rgba(144, 238, 144, 0.14)">
+Case1
+</span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(144, 238, 144, 0.14)">{{ else if </span></span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(130, 170, 255, 0.45)">.Case2</span></span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(144, 238, 144, 0.14)"> }}</span></span><span style="background:rgba(144, 238, 144, 0.14)">
+Case2
+</span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(144, 238, 144, 0.14)">{{ else if </span></span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(130, 170, 255, 0.45)">.Case3</span></span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(144, 238, 144, 0.14)"> }}</span></span><span style="background:rgba(144, 238, 144, 0.14)">
+Case3
+</span><span style="background:rgba(144, 238, 144, 0.14)"><span style="background:rgba(144, 238, 144, 0.14)">{{ else }}</span></span><span style="background:rgba(144, 238, 144, 0.14)">
+Other
+</span><span style="background:rgba(144, 238, 144, 0.14)">{{ end }}</span></pre>

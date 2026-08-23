@@ -1,5 +1,5 @@
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(135, 206, 250, 0.45)">{{ if .show }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ range .items }}</span><span style="background:rgba(255, 218, 185, 0.35)">
-  - </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(255, 150, 50, 0.28)">{{ .name }}</span></span><span style="background:rgba(255, 218, 185, 0.35)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
-</span><span style="background:rgba(135, 206, 250, 0.45)">{{ end }}</span></pre>
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(33, 102, 172, 0.22)">.show</span><span style="background:rgba(144, 238, 144, 0.30)"> }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ range </span><span style="background:rgba(33, 102, 172, 0.22)">.items</span><span style="background:rgba(255, 218, 185, 0.35)"> }}</span><span style="background:rgba(255, 218, 185, 0.35)">
+  - {{ </span><span style="background:rgba(255, 218, 185, 0.35)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(255, 218, 185, 0.35)"> }}
+</span><span style="background:rgba(255, 218, 185, 0.35)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.30)">
+</span><span style="background:rgba(144, 238, 144, 0.30)">{{ end }}</span></pre>
