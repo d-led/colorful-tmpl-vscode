@@ -7,19 +7,19 @@ export const PALETTES = {
     bg: "#1e1e2e",
     fg: "#cdd6f4",
     levels: [
-      "rgba(173, 216, 230, 0.14)", // light blue
-      "rgba(144, 238, 144, 0.14)", // light green
-      "rgba(255, 218, 185, 0.16)", // peach
-      "rgba(221, 160, 221, 0.14)", // plum
-      "rgba(255, 255, 150, 0.14)", // yellow
-      "rgba(255, 182, 193, 0.14)", // pink
+      "rgba(178, 218, 232, 0.18)", // light blue
+      "rgba(160, 235, 178, 0.18)", // light green
+      "rgba(255, 222, 192, 0.20)", // peach
+      "rgba(236, 190, 238, 0.18)", // plum
+      "rgba(255, 252, 180, 0.18)", // yellow
+      "rgba(255, 198, 208, 0.18)", // pink
     ],
-    varDef: "rgba(144, 238, 144, 0.40)", // green: $x :=
-    varAssign: "rgba(255, 183, 77, 0.45)", // orange: $x =
-    varUse: "rgba(130, 170, 255, 0.45)", // blue: $x / .field
-    func: "rgba(198, 160, 246, 0.45)", // violet: print / coll.Slice
-    pipe: "rgba(128, 222, 234, 0.50)", // cyan: |
-    comment: "rgba(140, 140, 140, 0.20)", // grey
+    varDef: "rgba(150, 238, 178, 0.30)", // green: $x :=
+    varAssign: "rgba(255, 208, 134, 0.30)", // orange: $x =
+    varUse: "rgba(156, 196, 255, 0.30)", // blue: $x / .field
+    func: "rgba(216, 188, 252, 0.30)", // violet: print / coll.Slice
+    pipe: "rgba(146, 228, 236, 0.30)", // cyan: |
+    comment: "rgba(182, 184, 196, 0.16)", // grey
   },
   light: {
     bg: "#ffffff",
@@ -67,7 +67,10 @@ function findActionSpans(tokens: ReturnType<typeof tokenize>): Span[] {
   const out: Span[] = [];
   let i = 0;
   while (i < tokens.length) {
-    if (tokens[i].type !== TokenType.DelimOpen) { i++; continue; }
+    if (tokens[i].type !== TokenType.DelimOpen) {
+      i++;
+      continue;
+    }
     const start = tokens[i].start;
     i++;
     while (i < tokens.length && tokens[i].type !== TokenType.DelimClose) i++;
@@ -85,11 +88,17 @@ function buildTextRangesByLevel(
     actionSpans.some((r) => pos >= r.start && pos < r.end);
   const byLevel = new Map<number, Span[]>();
   for (const t of tokens) {
-    if (t.type !== TokenType.Text || t.nestingLevel === 0 || insideAction(t.start)) continue;
+    if (
+      t.type !== TokenType.Text ||
+      t.nestingLevel === 0 ||
+      insideAction(t.start)
+    )
+      continue;
     const list = byLevel.get(t.nestingLevel) ?? [];
     const prev = list.at(-1);
-    if (prev && t.start <= prev.end) { if (t.end > prev.end) prev.end = t.end; }
-    else list.push({ start: t.start, end: t.end });
+    if (prev && t.start <= prev.end) {
+      if (t.end > prev.end) prev.end = t.end;
+    } else list.push({ start: t.start, end: t.end });
     byLevel.set(t.nestingLevel, list);
   }
   for (const [level, ranges] of byLevel) {
@@ -106,7 +115,10 @@ function buildTextRangesByLevel(
             t.start >= prev.end &&
             t.start < r.start,
         );
-      if (gapIsAllAction && prev) { prev.end = r.end; continue; }
+      if (gapIsAllAction && prev) {
+        prev.end = r.end;
+        continue;
+      }
       merged.push({ ...r });
     }
     byLevel.set(level, merged);
@@ -114,7 +126,9 @@ function buildTextRangesByLevel(
   return byLevel;
 }
 
-function computePaintedSpans(byLevel: Map<number, Span[]>): Map<number, Span[]> {
+function computePaintedSpans(
+  byLevel: Map<number, Span[]>,
+): Map<number, Span[]> {
   const sorted = [...byLevel.keys()].sort((a, b) => b - a);
   const painted = new Map<number, Span[]>();
   for (const level of sorted) {
@@ -128,7 +142,11 @@ function computePaintedSpans(byLevel: Map<number, Span[]>): Map<number, Span[]> 
   return painted;
 }
 
-function buildNestingBg(painted: Map<number, Span[]>, palette: string[], len: number): (string | null)[] {
+function buildNestingBg(
+  painted: Map<number, Span[]>,
+  palette: string[],
+  len: number,
+): (string | null)[] {
   const bg: (string | null)[] = new Array(len).fill(null);
   for (const [level, spans] of painted) {
     const color = palette[level % palette.length];
@@ -144,7 +162,10 @@ function fillBlockBg(
 ): void {
   let i = 0;
   while (i < tokens.length) {
-    if (tokens[i].type !== TokenType.DelimOpen) { i++; continue; }
+    if (tokens[i].type !== TokenType.DelimOpen) {
+      i++;
+      continue;
+    }
     const blockStart = tokens[i].start;
     i++;
     let ctrlLevel = 0;
@@ -160,7 +181,11 @@ function fillBlockBg(
       i++;
     }
     if (i < tokens.length) {
-      const color = hasComment ? P.comment : hasCtrl ? P.levels[ctrlLevel % P.levels.length] : null;
+      const color = hasComment
+        ? P.comment
+        : hasCtrl
+          ? P.levels[ctrlLevel % P.levels.length]
+          : null;
       if (color) for (let k = blockStart; k < tokens[i].end; k++) bg[k] = color;
     }
     i++;
@@ -175,13 +200,23 @@ function fillTokenBg(
   for (const t of tokens) {
     let color: string | null = null;
     switch (t.type) {
-      case TokenType.VariableDef:    color = P.varDef;    break;
-      case TokenType.VariableAssign: color = P.varAssign; break;
+      case TokenType.VariableDef:
+        color = P.varDef;
+        break;
+      case TokenType.VariableAssign:
+        color = P.varAssign;
+        break;
       case TokenType.VariableUse:
       case TokenType.Dot:
-      case TokenType.Field:          color = P.varUse;    break;
-      case TokenType.Function:       color = P.func;      break;
-      case TokenType.Pipe:           color = P.pipe;      break;
+      case TokenType.Field:
+        color = P.varUse;
+        break;
+      case TokenType.Function:
+        color = P.func;
+        break;
+      case TokenType.Pipe:
+        color = P.pipe;
+        break;
     }
     if (color) for (let k = t.start; k < t.end; k++) bg[k] = color;
   }
@@ -198,20 +233,28 @@ function buildSemanticBg(
   return bg;
 }
 
-function renderHtmlBody(source: string, P: ColorPalette, nestingBg: (string | null)[], semanticBg: (string | null)[]): string {
-  const esc = (ch: string) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch] ?? ch);
+function renderHtmlBody(
+  source: string,
+  P: ColorPalette,
+  nestingBg: (string | null)[],
+  semanticBg: (string | null)[],
+): string {
+  const esc = (ch: string) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch] ?? ch;
   let html = `<pre style="background:${P.bg};color:${P.fg};padding:12px;font:13px monospace;line-height:1.5;margin:0">`;
   let pos = 0;
   while (pos < source.length) {
     const nb = nestingBg[pos];
     const bc = semanticBg[pos];
     let j = pos;
-    while (j < source.length && nestingBg[j] === nb && semanticBg[j] === bc) j++;
+    while (j < source.length && nestingBg[j] === nb && semanticBg[j] === bc)
+      j++;
     const text = source.slice(pos, j).replace(/[&<>]/g, esc);
-    if (nb && bc)   html += `<span style="background:${nb}"><span style="background:${bc}">${text}</span></span>`;
-    else if (bc)    html += `<span style="background:${bc}">${text}</span>`;
-    else if (nb)    html += `<span style="background:${nb}">${text}</span>`;
-    else            html += text;
+    if (nb && bc)
+      html += `<span style="background:${nb}"><span style="background:${bc}">${text}</span></span>`;
+    else if (bc) html += `<span style="background:${bc}">${text}</span>`;
+    else if (nb) html += `<span style="background:${nb}">${text}</span>`;
+    else html += text;
     pos = j;
   }
   return html + "</pre>";
@@ -223,7 +266,10 @@ function renderHtmlBody(source: string, P: ColorPalette, nestingBg: (string | nu
  *
  * @param theme "dark" or "light" — selects palette and page background.
  */
-export function renderColoredHtml(source: string, theme: Theme = "dark"): string {
+export function renderColoredHtml(
+  source: string,
+  theme: Theme = "dark",
+): string {
   const P = PALETTES[theme];
   const tokens = tokenize(source);
   const actionSpans = findActionSpans(tokens);
@@ -233,4 +279,3 @@ export function renderColoredHtml(source: string, theme: Theme = "dark"): string
   const semanticBg = buildSemanticBg(tokens, P, source.length);
   return renderHtmlBody(source, P, nestingBg, semanticBg);
 }
-

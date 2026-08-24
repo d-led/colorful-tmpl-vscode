@@ -1,15 +1,15 @@
-<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.14)">{{ define "T1" }}</span><span style="background:rgba(144, 238, 144, 0.14)">
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(160, 235, 178, 0.18)">{{ define "T1" }}</span><span style="background:rgba(160, 235, 178, 0.18)">
 L1 top
-</span><span style="background:rgba(255, 218, 185, 0.16)">{{ if </span><span style="background:rgba(130, 170, 255, 0.45)">.show</span><span style="background:rgba(255, 218, 185, 0.16)"> }}</span><span style="background:rgba(255, 218, 185, 0.16)">
-  L2 {{ </span><span style="background:rgba(255, 218, 185, 0.16)"><span style="background:rgba(144, 238, 144, 0.40)">$x</span></span><span style="background:rgba(255, 218, 185, 0.16)"> := 1 }}
-  </span><span style="background:rgba(221, 160, 221, 0.14)">{{ range </span><span style="background:rgba(130, 170, 255, 0.45)">.items</span><span style="background:rgba(221, 160, 221, 0.14)"> }}</span><span style="background:rgba(221, 160, 221, 0.14)">
-    L3 {{ </span><span style="background:rgba(221, 160, 221, 0.14)"><span style="background:rgba(130, 170, 255, 0.45)">.name</span></span><span style="background:rgba(221, 160, 221, 0.14)"> }}
-    </span><span style="background:rgba(255, 255, 150, 0.14)">{{ with </span><span style="background:rgba(130, 170, 255, 0.45)">.sub</span><span style="background:rgba(255, 255, 150, 0.14)"> }}</span><span style="background:rgba(255, 255, 150, 0.14)">
-      L4 {{ </span><span style="background:rgba(255, 255, 150, 0.14)"><span style="background:rgba(130, 170, 255, 0.45)">.deep</span></span><span style="background:rgba(255, 255, 150, 0.14)"> }} {{ </span><span style="background:rgba(255, 255, 150, 0.14)"><span style="background:rgba(198, 160, 246, 0.45)">print</span></span><span style="background:rgba(255, 255, 150, 0.14)"> </span><span style="background:rgba(255, 255, 150, 0.14)"><span style="background:rgba(130, 170, 255, 0.45)">$x</span></span><span style="background:rgba(255, 255, 150, 0.14)"> }}
-    </span><span style="background:rgba(255, 255, 150, 0.14)">{{ end }}</span><span style="background:rgba(221, 160, 221, 0.14)">
-    L3 after with {{ </span><span style="background:rgba(221, 160, 221, 0.14)"><span style="background:rgba(130, 170, 255, 0.45)">.name</span></span><span style="background:rgba(221, 160, 221, 0.14)"> }}
-  </span><span style="background:rgba(221, 160, 221, 0.14)">{{ end }}</span><span style="background:rgba(255, 218, 185, 0.16)">
+</span><span style="background:rgba(255, 222, 192, 0.20)">{{ if </span><span style="background:rgba(156, 196, 255, 0.30)">.show</span><span style="background:rgba(255, 222, 192, 0.20)"> }}</span><span style="background:rgba(255, 222, 192, 0.20)">
+  L2 {{ </span><span style="background:rgba(255, 222, 192, 0.20)"><span style="background:rgba(150, 238, 178, 0.30)">$x</span></span><span style="background:rgba(255, 222, 192, 0.20)"> := 1 }}
+  </span><span style="background:rgba(236, 190, 238, 0.18)">{{ range </span><span style="background:rgba(156, 196, 255, 0.30)">.items</span><span style="background:rgba(236, 190, 238, 0.18)"> }}</span><span style="background:rgba(236, 190, 238, 0.18)">
+    L3 {{ </span><span style="background:rgba(236, 190, 238, 0.18)"><span style="background:rgba(156, 196, 255, 0.30)">.name</span></span><span style="background:rgba(236, 190, 238, 0.18)"> }}
+    </span><span style="background:rgba(255, 252, 180, 0.18)">{{ with </span><span style="background:rgba(156, 196, 255, 0.30)">.sub</span><span style="background:rgba(255, 252, 180, 0.18)"> }}</span><span style="background:rgba(255, 252, 180, 0.18)">
+      L4 {{ </span><span style="background:rgba(255, 252, 180, 0.18)"><span style="background:rgba(156, 196, 255, 0.30)">.deep</span></span><span style="background:rgba(255, 252, 180, 0.18)"> }} {{ </span><span style="background:rgba(255, 252, 180, 0.18)"><span style="background:rgba(216, 188, 252, 0.30)">print</span></span><span style="background:rgba(255, 252, 180, 0.18)"> </span><span style="background:rgba(255, 252, 180, 0.18)"><span style="background:rgba(156, 196, 255, 0.30)">$x</span></span><span style="background:rgba(255, 252, 180, 0.18)"> }}
+    </span><span style="background:rgba(255, 252, 180, 0.18)">{{ end }}</span><span style="background:rgba(236, 190, 238, 0.18)">
+    L3 after with {{ </span><span style="background:rgba(236, 190, 238, 0.18)"><span style="background:rgba(156, 196, 255, 0.30)">.name</span></span><span style="background:rgba(236, 190, 238, 0.18)"> }}
+  </span><span style="background:rgba(236, 190, 238, 0.18)">{{ end }}</span><span style="background:rgba(255, 222, 192, 0.20)">
   L2 after range
-</span><span style="background:rgba(255, 218, 185, 0.16)">{{ end }}</span><span style="background:rgba(144, 238, 144, 0.14)">
+</span><span style="background:rgba(255, 222, 192, 0.20)">{{ end }}</span><span style="background:rgba(160, 235, 178, 0.18)">
 L1 bottom
-</span><span style="background:rgba(144, 238, 144, 0.14)">{{ end }}</span></pre>
+</span><span style="background:rgba(160, 235, 178, 0.18)">{{ end }}</span></pre>

@@ -40,7 +40,12 @@ function advance(s: LexerState): string {
   return s.source[s.pos++];
 }
 
-function push(s: LexerState, type: TokenType, start: number, end: number): void {
+function push(
+  s: LexerState,
+  type: TokenType,
+  start: number,
+  end: number,
+): void {
   s.tokens.push({ type, start, end, nestingLevel: s.nestingLevel });
 }
 
@@ -75,10 +80,12 @@ function scanText(s: LexerState): void {
 
 function scanComment(s: LexerState): void {
   const start = s.pos;
-  advance(s); advance(s); // /*
+  advance(s);
+  advance(s); // /*
   while (s.pos < s.source.length) {
     if (peek(s) === "*" && peek(s, 1) === "/") {
-      advance(s); advance(s); // */
+      advance(s);
+      advance(s); // */
       break;
     }
     advance(s);
@@ -91,8 +98,15 @@ function scanString(s: LexerState): void {
   const quote = advance(s);
   while (s.pos < s.source.length) {
     const ch = peek(s);
-    if (ch === "\\") { advance(s); if (s.pos < s.source.length) advance(s); continue; }
-    if (ch === quote) { advance(s); break; }
+    if (ch === "\\") {
+      advance(s);
+      if (s.pos < s.source.length) advance(s);
+      continue;
+    }
+    if (ch === quote) {
+      advance(s);
+      break;
+    }
     advance(s);
   }
   push(s, TokenType.String, start, s.pos);
@@ -106,11 +120,14 @@ function scanVariable(s: LexerState): void {
   skipSpaces(s);
   if (peek(s) === ":" && peek(s, 1) === "=") {
     push(s, TokenType.VariableDef, start, nameEnd);
-    const opStart = s.pos; advance(s); advance(s); // :=
+    const opStart = s.pos;
+    advance(s);
+    advance(s); // :=
     push(s, TokenType.Operator, opStart, s.pos);
   } else if (peek(s) === "=" && peek(s, 1) !== "=") {
     push(s, TokenType.VariableAssign, start, nameEnd);
-    const opStart = s.pos; advance(s); // =
+    const opStart = s.pos;
+    advance(s); // =
     push(s, TokenType.Operator, opStart, s.pos);
   } else {
     push(s, TokenType.VariableUse, start, nameEnd);
@@ -172,18 +189,43 @@ function scanActionToken(s: LexerState): boolean {
   skipSpaces(s);
   if (atActionEnd(s)) return false;
   const ch = peek(s);
-  if (ch === '"' || ch === "`") { scanString(s); return true; }
-  if (ch === "/" && peek(s, 1) === "*") { scanComment(s); return true; }
-  if (ch === "|") { push(s, TokenType.Pipe, s.pos, s.pos + 1); advance(s); return true; }
-  if (ch === ".") {
-    if (isIdentStart(peek(s, 1))) scanField(s);
-    else { push(s, TokenType.Dot, s.pos, s.pos + 1); advance(s); }
+  if (ch === '"' || ch === "`") {
+    scanString(s);
     return true;
   }
-  if (ch === "$") { scanVariable(s); return true; }
-  if (/[0-9]/.test(ch)) { scanNumber(s); return true; }
-  if (isIdentStart(ch)) { scanIdentOrKeyword(s); return true; }
-  if ("(),=:".includes(ch)) { scanOperator(s); return true; }
+  if (ch === "/" && peek(s, 1) === "*") {
+    scanComment(s);
+    return true;
+  }
+  if (ch === "|") {
+    push(s, TokenType.Pipe, s.pos, s.pos + 1);
+    advance(s);
+    return true;
+  }
+  if (ch === ".") {
+    if (isIdentStart(peek(s, 1))) scanField(s);
+    else {
+      push(s, TokenType.Dot, s.pos, s.pos + 1);
+      advance(s);
+    }
+    return true;
+  }
+  if (ch === "$") {
+    scanVariable(s);
+    return true;
+  }
+  if (/[0-9]/.test(ch)) {
+    scanNumber(s);
+    return true;
+  }
+  if (isIdentStart(ch)) {
+    scanIdentOrKeyword(s);
+    return true;
+  }
+  if ("(),=:".includes(ch)) {
+    scanOperator(s);
+    return true;
+  }
   push(s, TokenType.Text, s.pos, s.pos + 1);
   advance(s);
   return true;
@@ -191,8 +233,13 @@ function scanActionToken(s: LexerState): boolean {
 
 function scanAction(s: LexerState): void {
   s.lastKeyword = null;
-  if (peek(s) === "/" && peek(s, 1) === "*") { scanComment(s); return; }
-  while (s.pos < s.source.length && scanActionToken(s)) { /* dispatch */ }
+  if (peek(s) === "/" && peek(s, 1) === "*") {
+    scanComment(s);
+    return;
+  }
+  while (s.pos < s.source.length && scanActionToken(s)) {
+    /* dispatch */
+  }
 }
 
 /**
@@ -200,7 +247,13 @@ function scanAction(s: LexerState): void {
  * annotated with nesting depth.
  */
 export function tokenize(source: string): Token[] {
-  const s: LexerState = { source, tokens: [], pos: 0, nestingLevel: 0, lastKeyword: null };
+  const s: LexerState = {
+    source,
+    tokens: [],
+    pos: 0,
+    nestingLevel: 0,
+    lastKeyword: null,
+  };
   while (s.pos < source.length) {
     scanText(s);
     if (s.pos >= source.length) break;
@@ -216,4 +269,3 @@ export function tokenize(source: string): Token[] {
   }
   return s.tokens;
 }
-

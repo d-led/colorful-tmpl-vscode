@@ -1,1 +1,1 @@
-<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0">{{ <span style="background:rgba(198, 160, 246, 0.45)">a</span> }}{{ <span style="background:rgba(198, 160, 246, 0.45)">b</span> }}</pre>
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px;font:13px monospace;line-height:1.5;margin:0">{{ <span style="background:rgba(216, 188, 252, 0.30)">a</span> }}{{ <span style="background:rgba(216, 188, 252, 0.30)">b</span> }}</pre>

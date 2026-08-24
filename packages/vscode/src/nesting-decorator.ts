@@ -6,20 +6,31 @@ const CFG = "colorful-tmpl.rainbow";
 
 // Must mirror the injectTo list in package.json — these languages get rainbow decorations automatically.
 const INJECTION_LANGS = new Set([
-  "yaml", "json", "html", "xml", "markdown",
-  "cmake", "sql", "python", "shellscript", "toml", "ruby", "go", "nginx",
+  "yaml",
+  "json",
+  "html",
+  "xml",
+  "markdown",
+  "cmake",
+  "sql",
+  "python",
+  "shellscript",
+  "toml",
+  "ruby",
+  "go",
+  "nginx",
 ]);
 
 type Span = { start: number; end: number };
 
 const PALETTES = {
   dark: [
-    "rgba(173,216,230,0.14)",
-    "rgba(144,238,144,0.14)",
-    "rgba(255,218,185,0.16)",
-    "rgba(221,160,221,0.14)",
-    "rgba(255,255,150,0.14)",
-    "rgba(255,182,193,0.14)",
+    "rgba(178,218,232,0.18)",
+    "rgba(160,235,178,0.18)",
+    "rgba(255,222,192,0.20)",
+    "rgba(236,190,238,0.18)",
+    "rgba(255,252,180,0.18)",
+    "rgba(255,198,208,0.18)",
   ],
   light: [
     "rgba(173,216,230,0.30)",
@@ -116,16 +127,15 @@ function buildLevelTextRanges(
 ): Map<number, Span[]> {
   const byLevel = groupTextRangesByLevel(tokens, insideAction);
   for (const [level, ranges] of byLevel) {
-    byLevel.set(
-      level,
-      extendRangesAcrossActions(ranges, tokens, insideAction),
-    );
+    byLevel.set(level, extendRangesAcrossActions(ranges, tokens, insideAction));
   }
   return byLevel;
 }
 
 // Deepest levels paint on top; shallower levels are clipped to the areas deeper levels don't cover.
-function computePaintedLevels(byLevel: Map<number, Span[]>): Map<number, Span[]> {
+function computePaintedLevels(
+  byLevel: Map<number, Span[]>,
+): Map<number, Span[]> {
   const sortedLevels = [...byLevel.keys()].sort((a, b) => b - a);
   const painted = new Map<number, Span[]>();
   for (const level of sortedLevels) {
@@ -290,20 +300,26 @@ function buildPaletteIndexMap(
 
 function singleUseColors(light: boolean) {
   return {
-    varDef:    light ? "rgba(46,160,67,0.22)"    : "rgba(144,238,144,0.40)",
-    varAssign: light ? "rgba(230,126,34,0.28)"   : "rgba(255,183,77,0.45)",
-    varUse:    light ? "rgba(33,102,172,0.22)"   : "rgba(130,170,255,0.45)",
-    func:      light ? "rgba(124,77,255,0.20)"   : "rgba(198,160,246,0.45)",
-    pipe:      light ? "rgba(0,131,143,0.24)"    : "rgba(128,222,234,0.50)",
-    comment:   light ? "rgba(160,160,160,0.18)"  : "rgba(140,140,140,0.20)",
+    varDef: light ? "rgba(46,160,67,0.22)" : "rgba(150,238,178,0.30)",
+    varAssign: light ? "rgba(230,126,34,0.28)" : "rgba(255,208,134,0.30)",
+    varUse: light ? "rgba(33,102,172,0.22)" : "rgba(156,196,255,0.30)",
+    func: light ? "rgba(124,77,255,0.20)" : "rgba(216,188,252,0.30)",
+    pipe: light ? "rgba(0,131,143,0.24)" : "rgba(146,228,236,0.30)",
+    comment: light ? "rgba(160,160,160,0.18)" : "rgba(182,184,196,0.16)",
   };
 }
 
-function buildActionMask(tokens: ReturnType<typeof tokenize>, len: number): Uint8Array {
+function buildActionMask(
+  tokens: ReturnType<typeof tokenize>,
+  len: number,
+): Uint8Array {
   const mask = new Uint8Array(len);
   let i = 0;
   while (i < tokens.length) {
-    if (tokens[i].type !== TokenType.DelimOpen) { i++; continue; }
+    if (tokens[i].type !== TokenType.DelimOpen) {
+      i++;
+      continue;
+    }
     const start = tokens[i].start;
     i++;
     while (i < tokens.length && tokens[i].type !== TokenType.DelimClose) i++;
@@ -393,15 +409,18 @@ export class NestingDecorator {
         }
       }),
       vscode.window.onDidChangeActiveTextEditor((ed) => {
-        if (ed && this.isActive(ed.document.languageId)) this.updateDecorations(ed);
+        if (!ed) return;
+        if (this.isActive(ed.document.languageId)) this.updateDecorations(ed);
+        else this.clearDecorations(ed);
       }),
       // onDidOpenTextDocument fires when a document is opened or its language changes.
       // VS Code updates ed.document before firing, so URI comparison is sufficient.
       vscode.workspace.onDidOpenTextDocument((doc) => {
-        if (!this.isActive(doc.languageId)) return;
         const uri = doc.uri.toString();
         for (const ed of vscode.window.visibleTextEditors) {
-          if (ed.document.uri.toString() === uri) this.updateDecorations(ed);
+          if (ed.document.uri.toString() !== uri) continue;
+          if (this.isActive(doc.languageId)) this.updateDecorations(ed);
+          else this.clearDecorations(ed);
         }
       }),
       // Debounce resize/zoom: onDidChangeVisibleTextEditors fires continuously during those.
@@ -415,7 +434,8 @@ export class NestingDecorator {
           this.refreshLanguageCache();
           this.rebuildDecorations();
           for (const ed of vscode.window.visibleTextEditors) {
-            if (this.isActive(ed.document.languageId)) this.updateDecorations(ed);
+            if (this.isActive(ed.document.languageId))
+              this.updateDecorations(ed);
           }
         }
       }),
@@ -432,10 +452,13 @@ export class NestingDecorator {
     const key = editor.document.uri.toString();
     const existing = this.timers.get(key);
     if (existing) clearTimeout(existing);
-    this.timers.set(key, setTimeout(() => {
-      this.timers.delete(key);
-      this.updateDecorations(editor);
-    }, 150));
+    this.timers.set(
+      key,
+      setTimeout(() => {
+        this.timers.delete(key);
+        this.updateDecorations(editor);
+      }, 150),
+    );
   }
 
   private updateDecorations(editor: vscode.TextEditor): void {
@@ -487,7 +510,6 @@ export class NestingDecorator {
     editor.setDecorations(this.funcDeco, func);
     editor.setDecorations(this.pipeDeco, pipe);
   }
-
 
   private clearDecorations(editor: vscode.TextEditor): void {
     for (const d of this.levelDecorations.values())
