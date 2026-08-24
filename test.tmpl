@@ -1,0 +1,192 @@
+{{- /* ================================================================
+  test.tmpl — comprehensive Go text/template feature showcase
+  Covers: whitespace trims, comments, dot/root/$, variables,
+  pipelines, conditionals, range (slice/map/N/break/continue),
+  with/else, define/template/block, built-in functions.
+  ================================================================ */ -}}
+
+{{/* ── NAMED TEMPLATES (define) ─────────────────────────────────── */}}
+
+{{define "labels"}}
+  app: {{.Name}}
+  version: {{.Version}}
+  env: {{.Env}}
+{{- end}}
+
+{{define "endpoint-summary"}}
+  {{- range $i, $ep := .}}
+  [{{$i}}] {{$ep.Path}} ({{$ep.Config.Protocol}})
+  {{- end}}
+{{- end}}
+
+{{/* ── BLOCK (define-on-first-use, overridable) ──────────────────── */}}
+{{block "file-header" .}}
+# ── Generated Manifest ──────────────────────────────────────────
+# Service : {{.ServiceName}}
+# Region  : {{.Region}}
+# ────────────────────────────────────────────────────────────────
+{{end}}
+
+{{/* ── ROOT CONTEXT & VARIABLES ──────────────────────────────────── */}}
+{{$root     := $}}
+{{$svcName  := printf "%s-svc" .ServiceName}}
+{{$maxRetry := 3}}
+{{$count    := len .Services}}
+
+# Rendered service : {{$svcName}}
+# Total services   : {{$count}}
+# Max retries      : {{$maxRetry}}
+
+{{/* ── PIPELINES & FUNCTION CALLS ────────────────────────────────── */}}
+# Quoted name  : {{ .ServiceName | printf "%q" }}
+# Count (parens): {{ printf "services=%d" (len .Services) }}
+# call example : {{ call .Formatter .ServiceName "prod" }}
+
+{{/* ── CONDITIONALS: if / else if / else, and, or, not ───────────── */}}
+{{if .GlobalTLS -}}
+tls: enabled
+{{- else if and .StagingMode (not .Debug) -}}
+tls: staging-only
+{{- else -}}
+tls: disabled
+{{- end}}
+
+{{if or .SkipChecks .ForceDeployment}}
+validation: skipped
+{{- end}}
+
+{{if and .A (eq .B 2)}}
+ab-check: passed
+{{- end}}
+
+{{/* ── 4+ LAYERS OF NESTING (range + if + range + with + if) ─────── */}}
+services:
+{{- range $si, $svc := .Services}}                      {{/* ① range .Services */}}
+  - name:    {{$svc.Name}}
+    index:   {{$si}}
+    root-svc: {{$.ServiceName}}                         {{/* $ root inside range */}}
+    {{- if $svc.Enabled}}                               {{/* ② if .Enabled */}}
+    status: active
+    endpoints:
+    {{- range $ei, $ep := $svc.Endpoints}}              {{/* ③ range .Endpoints */}}
+      - path:  {{$ep.Path}}
+        index: {{$ei}}
+        {{- with $ep.Config}}                           {{/* ④ with .Config */}}
+        config:
+          timeout:  {{.Timeout}}
+          {{- if and .TLS (eq .Protocol "https")}}      {{/* ⑤ if + and + eq */}}
+          tls:      true
+          protocol: https
+          cert:     {{ printf "%s.crt" $svc.Name }}
+          {{- else if eq .Protocol "grpc"}}
+          tls:      false
+          protocol: grpc
+          {{- else if or (eq .Protocol "http") (eq .Protocol "h2c")}}
+          tls:      false
+          protocol: {{.Protocol}}
+          {{- else}}
+          tls:      false
+          protocol: unknown
+          {{- end}}                                     {{/* end ⑤ */}}
+        {{- end}}                                       {{/* end ④ with */}}
+    {{- end}}                                           {{/* end ③ range endpoints */}}
+    {{- else}}                                          {{/* else ② */}}
+    status:   disabled
+    {{- end}}                                           {{/* end ② if */}}
+{{- end}}                                               {{/* end ① range services */}}
+
+{{/* ── RANGE ELSE (empty-collection fallback) ───────────────────── */}}
+extra-configs:
+{{- range .ExtraConfigs}}
+  - {{.}}
+{{- else}}
+  # (none configured)
+{{- end}}
+
+{{/* ── RANGE OVER MAP (key + value) ─────────────────────────────── */}}
+environment:
+{{- range $k, $v := .Env}}
+  {{$k}}: {{$v}}
+{{- end}}
+
+{{/* ── RANGE N TIMES (integer count; dot = 0..N-1) ──────────────── */}}
+retry-backoff:
+{{- range 4}}
+  - attempt-{{.}}
+{{- end}}
+
+{{/* ── BREAK / CONTINUE IN RANGE ─────────────────────────────────── */}}
+selected-tasks:
+{{- range .Tasks}}
+  {{- if eq .ID "skip"}}{{continue}}{{end -}}
+  {{- if eq .ID "stop"}}{{break}}{{end -}}
+  - {{.ID}}
+{{- end}}
+
+{{/* ── CONTEXT SWITCH: with / else-with / else ───────────────────── */}}
+{{with .MainDB -}}
+database:
+  host: {{.Host}}
+  port: {{.Port}}
+{{- else with .FallbackDB -}}
+database:
+  host: {{.Host}}
+  port: {{.Port}}
+  note: using-fallback
+{{- else -}}
+database: none
+{{- end}}
+
+{{/* ── BUILT-IN FUNCTIONS: len, index, slice, eq/ne/lt/gt ────────── */}}
+matrix-cell:  {{ index .Matrix 0 1 }}
+tags-slice:   {{ slice .Tags 1 3 }}
+tag-count:    {{ len .Tags }}
+name-eq:      {{ eq .ServiceName $svcName }}
+port-ne-zero: {{ ne .Port 0 }}
+is-small:     {{ if lt $count 5 }}yes{{else}}no{{end}}
+
+{{/* ── ESCAPE FUNCTIONS (html / js / urlquery) ────────────────────── */}}
+html-escaped:  {{ html .RawHTML }}
+js-escaped:    {{ js .RawHTML }}
+url-escaped:   {{ urlquery .RawHTML }}
+
+{{/* ── TEMPLATE INVOCATION (pass sub-object as new dot) ──────────── */}}
+{{template "labels" .Meta}}
+
+{{/* ── ENDPOINT SUMMARY via define ──────────────────────────────── */}}
+{{- with index .Services 0}}
+{{template "endpoint-summary" .Endpoints}}
+{{- end}}
+
+{{/* ── VARIABLE REASSIGNMENT ──────────────────────────────────────── */}}
+{{$mode := "read"}}
+{{- if .ReadWrite}}{{$mode = "read-write"}}{{end}}
+mode: {{$mode}}
+
+{{/* ── WHITESPACE TRIM (Helm-style key:value tight output) ────────── */}}
+key: value
+{{- if .Flag}}
+extra: true
+{{- end}}
+next: item
+
+{{/* ── TRIM AROUND COMMENT (Nomad-style) ─────────────────────────── */}}
+{{- /* debug logging disabled */ -}}
+
+{{/* ── LITERAL BRACES (emit {{ .Field }} as raw text) ────────────── */}}
+example-placeholder: {{ printf "%s%s%s" "{{" ".SomeField" "}}" }}
+
+{{/* ── RANGE + INDEX VARIABLE (slice) ────────────────────────────── */}}
+lines:
+{{- range $i, $v := .Lines}}
+  {{$i}}: {{$v}}
+{{- end}}
+
+{{/* ── CHAINED FIELD ACCESS & METHOD CALL ─────────────────────────── */}}
+nested-name:    {{.User.Name}}
+formatted-hex:  {{.Value | printf "%x"}}
+
+{{/* ── TALLY USING VARIABLE ACROSS RANGE ─────────────────────────── */}}
+{{- $n := 0 -}}
+{{- range .Services -}}{{- $n = (len $.Services) -}}{{- end -}}
+total-services-final: {{$n}}
