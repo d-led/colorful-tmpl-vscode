@@ -1,57 +1,75 @@
-# 🌳 Colorful Trees Forest — Go Template Rainbow Highlighter
+# Colorful Go Template — Rainbow Highlighter
 
-> Because Go templates deserve syntax highlighting that doesn't suck.
+> Go template rainbow backgrounds, variable spotting, and `{{ }}` injection into any host language.
 
 ## What it does
 
-- **Rainbow backgrounds** — each nesting level (inside `if`/`range`/`with`/`define`) gets a distinct background color. The palette rotates every 6 levels, so deeply nested templates stay readable.
-- **Variable spotting** — `$x :=` definitions glow green, `$x =` assignments glow orange, `$x` uses glow blue. No more squinting at `$` signs.
-- **TextMate grammar** — basic foreground coloring via standard scopes works even in diff/peek views.
-- **Semantic tokens** — variable definitions vs uses are classified so themes can style them differently.
-- **Full Go template syntax** — pipes, dotted function names (`coll.Slice`), whitespace trimming (`{{-`, `-}}`), and comments (`{{/* ... */}}`).
+- **Rainbow backgrounds** — each nesting level (`if`/`range`/`with`/`define`) gets a distinct background color, rotating through 6 levels.
+- **Variable spotting** — `$x :=` definitions glow green, `$x =` assignments glow orange, `$x` uses glow blue.
+- **TextMate grammar** — foreground scope coloring in diff/peek views.
+- **Semantic tokens** — variable definitions vs. uses are classified so themes can style them.
+- **Injection grammar** — `{{ }}` actions are highlighted and rainbow-decorated inside any supported host language without losing that language's own syntax coloring.
+
+## Which language mode to choose
+
+| File type | Language mode to set | Why |
+|---|---|---|
+| Pure Go template (`.gotmpl`, `.gohtml`, etc.) | **Colorful Go Template** | The file IS the template; no base syntax to preserve. |
+| Template wrapping CMake, SQL, YAML, … | **Keep the base language** (`cmake`, `sql`, `yaml`, …) | The injection grammar adds `{{ }}` scopes on top; the decorator runs automatically. |
+
+For the second case, add specific patterns to `files.associations` so VS Code picks the right language. More specific globs win over less specific ones:
+
+```jsonc
+// .vscode/settings.json or user settings
+"files.associations": {
+  // pure templates → colorful-tmpl
+  "*.gotmpl":            "colorful-tmpl",
+  "*.gohtml":            "colorful-tmpl",
+  // mixed templates → base language (more specific patterns take priority)
+  "CMakeLists.*.tmpl":   "cmake",
+  "*.cmake.tmpl":        "cmake",
+  "*.yaml.tmpl":         "yaml",
+  "*.sql.tmpl":          "sql",
+  "*.sh.tmpl":           "shellscript",
+  "*.py.tmpl":           "python",
+  // fallback for any remaining .tmpl
+  "*.tmpl":              "colorful-tmpl"
+}
+```
+
+## Automatic injection languages
+
+The extension injects `{{ }}` syntax scopes and applies rainbow backgrounds automatically when the file language is one of:
+
+`yaml` · `json` · `html` · `xml` · `markdown` · `cmake` · `sql` · `python` · `shellscript` · `toml` · `ruby` · `go` · `nginx`
+
+For any other language, add it to `colorful-tmpl.rainbow.additionalLanguages`.
+
+## Settings
+
+| Key | Default | Description |
+|---|---|---|
+| `colorful-tmpl.rainbow.enabled` | `true` | Enable/disable all rainbow backgrounds. |
+| `colorful-tmpl.rainbow.palette` | 6 rgba colors | Background colors per nesting level (rotates). |
+| `colorful-tmpl.rainbow.additionalLanguages` | `[]` | Extra language IDs to apply rainbow decorations to, beyond the built-in injection list. |
 
 ## Packages
 
-| Package                  | npm                 | Description                                             |
-| ------------------------ | ------------------- | ------------------------------------------------------- |
-| `@gotmpl/highlight-core` | [npm]               | Editor-agnostic Go template lexer with nesting tracking |
-| `gotmpl-vscode`          | VS Code Marketplace | VS Code extension: grammars + rainbow decorations       |
+| Package | Description |
+|---|---|
+| `@colorful-tmpl/highlight-core` | Editor-agnostic Go template lexer with nesting tracking |
+| `colorful-tmpl` (VS Code) | Grammars + rainbow decorator extension |
 
 ## Development
 
 ```bash
 npm install
-npm test                    # Run all tests
-npm run build               # Build core + extension
-npm run vscode:package      # Create .vsix
+npm test                        # run all tests
+npm run build                   # build core + extension
+scripts/install-here.sh         # build, package and install into current editor
+scripts/analyze.ts.sh           # run refactoring metrics lint
 ```
-
-## Configuration
-
-```jsonc
-{
-  "gotmpl.rainbow.enabled": true,
-  "gotmpl.rainbow.palette": [
-    "rgba(173, 216, 230, 0.20)", // light blue
-    "rgba(144, 238, 144, 0.20)", // light green
-    "rgba(255, 218, 185, 0.20)", // peach
-    "rgba(221, 160, 221, 0.20)", // plum
-    "rgba(255, 255, 150, 0.20)", // light yellow
-    "rgba(255, 182, 193, 0.20)", // light pink
-  ],
-  "gotmpl.rainbow.variableHighlight": true,
-}
-```
-
-## Supported file extensions
-
-- `.gotmpl` — generic Go template
-- `.tpl` — template files
-- `.gtpl` — Go template
-- `.gohtml` — Go HTML templates
-
-The injection grammar also fires inside `.html`, `.yaml`, `.json`, `.xml`, and `.md` files — any `{{ ... }}` action gets highlighted.
 
 ## License
 
-MPLv2
+MPL-2.0
