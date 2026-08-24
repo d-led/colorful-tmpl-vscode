@@ -4,6 +4,23 @@ import * as vscode from "vscode";
 const LANG = "colorful-tmpl";
 const CFG = "colorful-tmpl.rainbow";
 
+// Must mirror the injectTo list in package.json — these languages get rainbow decorations automatically.
+const INJECTION_LANGS = new Set([
+  "yaml", "json", "html", "xml", "markdown",
+  "cmake", "sql", "python", "shellscript", "toml", "ruby", "go", "nginx",
+]);
+
+function activeLanguages(): Set<string> {
+  const extra = vscode.workspace
+    .getConfiguration(CFG)
+    .get<string[]>("additionalLanguages", []);
+  return new Set([LANG, ...INJECTION_LANGS, ...extra]);
+}
+
+function isActiveLanguage(languageId: string): boolean {
+  return activeLanguages().has(languageId);
+}
+
 type Span = { start: number; end: number };
 
 const PALETTES = {
@@ -370,19 +387,19 @@ export class NestingDecorator {
   activate(): void {
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (e.document.languageId === LANG) {
+        if (isActiveLanguage(e.document.languageId)) {
           for (const ed of vscode.window.visibleTextEditors) {
             if (ed.document === e.document) this.scheduleUpdate(ed);
           }
         }
       }),
       vscode.window.onDidChangeActiveTextEditor((ed) => {
-        if (ed?.document.languageId === LANG) this.updateDecorations(ed);
+        if (ed && isActiveLanguage(ed.document.languageId)) this.updateDecorations(ed);
       }),
       // onDidOpenTextDocument fires when a document is opened or its language changes.
       // VS Code updates ed.document before firing, so URI comparison is sufficient.
       vscode.workspace.onDidOpenTextDocument((doc) => {
-        if (doc.languageId !== LANG) return;
+        if (!isActiveLanguage(doc.languageId)) return;
         const uri = doc.uri.toString();
         for (const ed of vscode.window.visibleTextEditors) {
           if (ed.document.uri.toString() === uri) this.updateDecorations(ed);
@@ -392,14 +409,14 @@ export class NestingDecorator {
       // (e.g. a background tab restored at startup, or a diff/split view) — catch those too.
       vscode.window.onDidChangeVisibleTextEditors((editors) => {
         for (const ed of editors) {
-          if (ed.document.languageId === LANG) this.updateDecorations(ed);
+          if (isActiveLanguage(ed.document.languageId)) this.updateDecorations(ed);
         }
       }),
       vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration(CFG)) {
           this.rebuildDecorations();
           for (const ed of vscode.window.visibleTextEditors) {
-            if (ed.document.languageId === LANG) this.updateDecorations(ed);
+            if (isActiveLanguage(ed.document.languageId)) this.updateDecorations(ed);
           }
         }
       }),
@@ -407,12 +424,12 @@ export class NestingDecorator {
     // onStartupFinished guarantees activate() runs after VS Code is fully initialized;
     // onDidChangeVisibleTextEditors handles editors that become visible after activate().
     for (const ed of vscode.window.visibleTextEditors) {
-      if (ed.document.languageId === LANG) this.updateDecorations(ed);
+      if (isActiveLanguage(ed.document.languageId)) this.updateDecorations(ed);
     }
   }
 
   private scheduleUpdate(editor: vscode.TextEditor | undefined): void {
-    if (editor?.document.languageId !== LANG) return;
+    if (!editor || !isActiveLanguage(editor.document.languageId)) return;
     if (this.timeout) clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
       this.timeout = undefined;
@@ -427,6 +444,11 @@ export class NestingDecorator {
     }
 
     const source = editor.document.getText();
+    // Skip tokenizing files that have no template delimiters (fast path for large non-template files).
+    if (editor.document.languageId !== LANG && !source.includes("{{")) {
+      this.clearDecorations(editor);
+      return;
+    }
     const tokens = tokenize(source);
     const paletteSize = this.levelDecorations.size;
     const rng = (s: number, e: number) =>
