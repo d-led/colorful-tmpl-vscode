@@ -22,314 +22,198 @@ const KEYWORDS = new Set([
   "template",
 ]);
 
+/** Mutable scanner state threaded through all lexer helpers. */
+interface LexerState {
+  readonly source: string;
+  readonly tokens: Token[];
+  pos: number;
+  nestingLevel: number;
+  lastKeyword: string | null;
+}
+
+function peek(s: LexerState, offset = 0): string {
+  const i = s.pos + offset;
+  return i < s.source.length ? s.source[i] : "";
+}
+
+function advance(s: LexerState): string {
+  return s.source[s.pos++];
+}
+
+function push(s: LexerState, type: TokenType, start: number, end: number): void {
+  s.tokens.push({ type, start, end, nestingLevel: s.nestingLevel });
+}
+
+function consumeWhile(s: LexerState, pred: (ch: string) => boolean): void {
+  while (s.pos < s.source.length && pred(peek(s))) advance(s);
+}
+
+function isIdentStart(ch: string): boolean {
+  return /[a-zA-Z_]/.test(ch);
+}
+
+function isIdentPart(ch: string): boolean {
+  return /[a-zA-Z0-9_.]/.test(ch);
+}
+
+function isSpace(ch: string): boolean {
+  return ch === " " || ch === "\t" || ch === "\n" || ch === "\r";
+}
+
+function skipSpaces(s: LexerState): void {
+  while (s.pos < s.source.length && isSpace(peek(s))) advance(s);
+}
+
+function scanText(s: LexerState): void {
+  const start = s.pos;
+  while (s.pos < s.source.length) {
+    if (peek(s) === "{" && peek(s, 1) === "{") break;
+    advance(s);
+  }
+  if (s.pos > start) push(s, TokenType.Text, start, s.pos);
+}
+
+function scanComment(s: LexerState): void {
+  const start = s.pos;
+  advance(s); advance(s); // /*
+  while (s.pos < s.source.length) {
+    if (peek(s) === "*" && peek(s, 1) === "/") {
+      advance(s); advance(s); // */
+      break;
+    }
+    advance(s);
+  }
+  push(s, TokenType.Comment, start, s.pos);
+}
+
+function scanString(s: LexerState): void {
+  const start = s.pos;
+  const quote = advance(s);
+  while (s.pos < s.source.length) {
+    const ch = peek(s);
+    if (ch === "\\") { advance(s); if (s.pos < s.source.length) advance(s); continue; }
+    if (ch === quote) { advance(s); break; }
+    advance(s);
+  }
+  push(s, TokenType.String, start, s.pos);
+}
+
+function scanVariable(s: LexerState): void {
+  const start = s.pos;
+  advance(s); // $
+  consumeWhile(s, isIdentPart);
+  const nameEnd = s.pos;
+  skipSpaces(s);
+  if (peek(s) === ":" && peek(s, 1) === "=") {
+    push(s, TokenType.VariableDef, start, nameEnd);
+    const opStart = s.pos; advance(s); advance(s); // :=
+    push(s, TokenType.Operator, opStart, s.pos);
+  } else if (peek(s) === "=" && peek(s, 1) !== "=") {
+    push(s, TokenType.VariableAssign, start, nameEnd);
+    const opStart = s.pos; advance(s); // =
+    push(s, TokenType.Operator, opStart, s.pos);
+  } else {
+    push(s, TokenType.VariableUse, start, nameEnd);
+  }
+}
+
+function scanField(s: LexerState): void {
+  const start = s.pos;
+  advance(s); // .
+  consumeWhile(s, isIdentPart);
+  push(s, TokenType.Field, start, s.pos);
+}
+
+function scanNumber(s: LexerState): void {
+  const start = s.pos;
+  consumeWhile(s, (ch) => /[0-9.]/.test(ch));
+  push(s, TokenType.Number, start, s.pos);
+}
+
+function scanOperator(s: LexerState): void {
+  const start = s.pos;
+  const ch = advance(s);
+  if (ch === ":" && peek(s) === "=") advance(s);
+  push(s, TokenType.Operator, start, s.pos);
+}
+
+function scanIdentOrKeyword(s: LexerState): void {
+  const start = s.pos;
+  consumeWhile(s, isIdentPart);
+  const word = s.source.slice(start, s.pos);
+  if (!KEYWORDS.has(word)) {
+    push(s, TokenType.Function, start, s.pos);
+    return;
+  }
+  const opensBlock =
+    BLOCK_START.has(word) && !(word === "if" && s.lastKeyword === "else");
+  if (word === "end") {
+    push(s, TokenType.Keyword, start, s.pos);
+    s.nestingLevel = Math.max(0, s.nestingLevel - 1);
+  } else if (opensBlock) {
+    s.nestingLevel += 1;
+    push(s, TokenType.Keyword, start, s.pos);
+  } else {
+    push(s, TokenType.Keyword, start, s.pos);
+  }
+  s.lastKeyword = word;
+}
+
+function atActionEnd(s: LexerState): boolean {
+  return (
+    s.pos >= s.source.length ||
+    (peek(s) === "}" && peek(s, 1) === "}") ||
+    (peek(s) === "-" && peek(s, 1) === "}" && peek(s, 2) === "}")
+  );
+}
+
+// Dispatches one token inside a {{ }} action. Returns false when at the closing delimiter.
+function scanActionToken(s: LexerState): boolean {
+  skipSpaces(s);
+  if (atActionEnd(s)) return false;
+  const ch = peek(s);
+  if (ch === '"' || ch === "`") { scanString(s); return true; }
+  if (ch === "/" && peek(s, 1) === "*") { scanComment(s); return true; }
+  if (ch === "|") { push(s, TokenType.Pipe, s.pos, s.pos + 1); advance(s); return true; }
+  if (ch === ".") {
+    if (isIdentStart(peek(s, 1))) scanField(s);
+    else { push(s, TokenType.Dot, s.pos, s.pos + 1); advance(s); }
+    return true;
+  }
+  if (ch === "$") { scanVariable(s); return true; }
+  if (/[0-9]/.test(ch)) { scanNumber(s); return true; }
+  if (isIdentStart(ch)) { scanIdentOrKeyword(s); return true; }
+  if ("(),=:".includes(ch)) { scanOperator(s); return true; }
+  push(s, TokenType.Text, s.pos, s.pos + 1);
+  advance(s);
+  return true;
+}
+
+function scanAction(s: LexerState): void {
+  s.lastKeyword = null;
+  if (peek(s) === "/" && peek(s, 1) === "*") { scanComment(s); return; }
+  while (s.pos < s.source.length && scanActionToken(s)) { /* dispatch */ }
+}
+
 /**
  * Tokenize a Go template source string into a flat array of {@link Token}s
  * annotated with nesting depth.
- *
- * The lexer is a hand-written recursive-descent scanner that tracks:
- * - Action boundaries (`{{` / `}}`)
- * - Nesting level (incremented on `if`, `range`, `with`, `define`, `block`;
- *   decremented on `end`)
- * - Variable definitions (`$x :=`) vs uses (`$x`)
- * - Strings, numbers, comments, pipes, and the context dot
- *
- * @param source - The raw Go template text.
- * @returns Ordered array of tokens covering the entire source.
  */
 export function tokenize(source: string): Token[] {
-  const tokens: Token[] = [];
-  const len = source.length;
-  let pos = 0;
-  let nestingLevel = 0;
-  let lastKeyword: string | null = null;
-
-  function push(type: TokenType, start: number, end: number): void {
-    tokens.push({ type, start, end, nestingLevel });
+  const s: LexerState = { source, tokens: [], pos: 0, nestingLevel: 0, lastKeyword: null };
+  while (s.pos < source.length) {
+    scanText(s);
+    if (s.pos >= source.length) break;
+    const delimStart = s.pos;
+    const trimLeft = peek(s, 2) === "-";
+    s.pos += trimLeft ? 3 : 2;
+    push(s, TokenType.DelimOpen, delimStart, s.pos);
+    scanAction(s);
+    const closeStart = s.pos;
+    if (peek(s) === "-" && peek(s, 1) === "}" && peek(s, 2) === "}") s.pos += 3;
+    else if (peek(s) === "}" && peek(s, 1) === "}") s.pos += 2;
+    if (s.pos > closeStart) push(s, TokenType.DelimClose, closeStart, s.pos);
   }
-
-  function peek(offset = 0): string {
-    return pos + offset < len ? source[pos + offset] : "";
-  }
-
-  function advance(): string {
-    return source[pos++];
-  }
-
-  function consumeWhile(pred: (ch: string) => boolean): number {
-    const start = pos;
-    while (pos < len && pred(peek())) {
-      advance();
-    }
-    return pos - start;
-  }
-
-  // ---- helpers for specific token kinds ----
-
-  function scanText(): void {
-    const start = pos;
-    // Consume until we hit `{{` or end of input.
-    while (pos < len) {
-      if (peek() === "{" && peek(1) === "{") {
-        break;
-      }
-      advance();
-    }
-    if (pos > start) {
-      push(TokenType.Text, start, pos);
-    }
-  }
-
-  function isIdentStart(ch: string): boolean {
-    return /[a-zA-Z_]/.test(ch);
-  }
-
-  function isIdentPart(ch: string): boolean {
-    return /[a-zA-Z0-9_.]/.test(ch);
-  }
-
-  function isSpace(ch: string): boolean {
-    return ch === " " || ch === "\t" || ch === "\n" || ch === "\r";
-  }
-
-  function skipSpaces(): void {
-    while (pos < len && isSpace(peek())) {
-      advance();
-    }
-  }
-
-  /**
-   * Scan the contents *between* `{{` and `}}`.
-   * `pos` is just past the opening delimiter.
-   */
-  function scanAction(_endDelim: string): void {
-    lastKeyword = null;
-    // Check for comment first
-    if (peek() === "/" && peek(1) === "*") {
-      scanComment();
-      return;
-    }
-
-    while (pos < len) {
-      skipSpaces();
-      if (pos >= len) break;
-
-      // Re-check for closing delimiter after skipping spaces
-      if (peek() === "}" && peek(1) === "}") {
-        break;
-      }
-      if (peek() === "-" && peek(1) === "}" && peek(2) === "}") {
-        break;
-      }
-
-      const ch = peek();
-
-      // String literals
-      if (ch === '"' || ch === "`") {
-        scanString();
-        continue;
-      }
-
-      // Comment
-      if (ch === "/" && peek(1) === "*") {
-        scanComment();
-        continue;
-      }
-
-      // Pipe
-      if (ch === "|") {
-        push(TokenType.Pipe, pos, pos + 1);
-        advance();
-        continue;
-      }
-
-      // Dot: bare context dot (`.`) or field access (`.name`, `.map.foo`).
-      if (ch === ".") {
-        if (isIdentStart(peek(1))) {
-          scanField();
-        } else {
-          push(TokenType.Dot, pos, pos + 1);
-          advance();
-        }
-        continue;
-      }
-
-      // Variable: $name
-      if (ch === "$") {
-        scanVariable();
-        continue;
-      }
-
-      // Numbers
-      if (/[0-9]/.test(ch)) {
-        scanNumber();
-        continue;
-      }
-
-      // Identifiers / keywords / functions
-      if (isIdentStart(ch)) {
-        scanIdentOrKeyword();
-        continue;
-      }
-
-      // Operators and punctuation
-      if (ch === "(" || ch === ")" || ch === "," || ch === "=" || ch === ":") {
-        scanOperator();
-        continue;
-      }
-
-      // Fallback: consume single char as text to avoid infinite loop
-      push(TokenType.Text, pos, pos + 1);
-      advance();
-    }
-  }
-
-  function scanComment(): void {
-    const start = pos;
-    // `/*` already matched
-    advance(); // /
-    advance(); // *
-    while (pos < len) {
-      if (peek() === "*" && peek(1) === "/") {
-        advance(); // *
-        advance(); // /
-        break;
-      }
-      advance();
-    }
-    push(TokenType.Comment, start, pos);
-  }
-
-  function scanString(): void {
-    const start = pos;
-    const quote = advance(); // " or `
-    while (pos < len) {
-      const ch = peek();
-      if (ch === "\\") {
-        advance(); // backslash
-        if (pos < len) advance(); // escaped char
-        continue;
-      }
-      if (ch === quote) {
-        advance(); // closing quote
-        break;
-      }
-      advance();
-    }
-    push(TokenType.String, start, pos);
-  }
-
-  function scanVariable(): void {
-    const start = pos;
-    advance(); // $
-
-    // Consume variable name (may include dots for map access: $x.y.z)
-    consumeWhile(isIdentPart);
-
-    const nameEnd = pos;
-
-    // Look ahead (skipping spaces) for `:=` or `=`
-    skipSpaces();
-    if (peek() === ":" && peek(1) === "=") {
-      // `$x :=` — definition
-      push(TokenType.VariableDef, start, nameEnd);
-      const opStart = pos;
-      advance(); // :
-      advance(); // =
-      push(TokenType.Operator, opStart, pos);
-    } else if (peek() === "=" && peek(1) !== "=") {
-      // `$x =` — assignment
-      push(TokenType.VariableAssign, start, nameEnd);
-      const opStart = pos;
-      advance(); // =
-      push(TokenType.Operator, opStart, pos);
-    } else {
-      push(TokenType.VariableUse, start, nameEnd);
-    }
-  }
-
-  function scanField(): void {
-    const start = pos;
-    advance(); // leading `.`
-    // Field access may itself be dotted: `.a.b.c`
-    consumeWhile(isIdentPart);
-    push(TokenType.Field, start, pos);
-  }
-
-  function scanNumber(): void {
-    const start = pos;
-    consumeWhile((ch) => /[0-9.]/.test(ch));
-    push(TokenType.Number, start, pos);
-  }
-
-  function scanOperator(): void {
-    const start = pos;
-    const ch = advance();
-    if (ch === ":" && peek() === "=") {
-      advance(); // =
-      push(TokenType.Operator, start, pos);
-    } else if (ch === "=") {
-      push(TokenType.Operator, start, pos);
-    } else {
-      push(TokenType.Operator, start, pos);
-    }
-  }
-
-  function scanIdentOrKeyword(): void {
-    const start = pos;
-    consumeWhile(isIdentPart);
-    const word = source.slice(start, pos);
-
-    if (KEYWORDS.has(word)) {
-      // `else if` continues the same block; it must not open a new level.
-      const opensBlock =
-        BLOCK_START.has(word) && !(word === "if" && lastKeyword === "else");
-      if (word === "end") {
-        push(TokenType.Keyword, start, pos);
-        nestingLevel = Math.max(0, nestingLevel - 1);
-      } else if (opensBlock) {
-        // Increment nesting *before* pushing so if/else/end share the same level
-        nestingLevel += 1;
-        push(TokenType.Keyword, start, pos);
-      } else {
-        // `else`, `template` — no nesting change
-        push(TokenType.Keyword, start, pos);
-      }
-      lastKeyword = word;
-    } else {
-      // It's a function call
-      push(TokenType.Function, start, pos);
-    }
-  }
-
-  // ---- main scanner loop ----
-
-  while (pos < len) {
-    // Scan plain text until `{{`
-    scanText();
-
-    if (pos >= len) break;
-
-    // Now we're at `{{`
-    const delimStart = pos;
-    const isTrimLeft = peek(2) === "-";
-    const openBraceLen = isTrimLeft ? 3 : 2;
-    pos += openBraceLen;
-    push(TokenType.DelimOpen, delimStart, pos);
-
-    // Scan action content until `}}` or `-}}`
-    scanAction("}}");
-
-    // Now we should be at `}}` or `-}}`
-    const closeStart = pos;
-    if (peek() === "-" && peek(1) === "}" && peek(2) === "}") {
-      pos += 3;
-    } else if (peek() === "}" && peek(1) === "}") {
-      pos += 2;
-    }
-    if (pos > closeStart) {
-      push(TokenType.DelimClose, closeStart, pos);
-    }
-  }
-
-  return tokens;
+  return s.tokens;
 }
+

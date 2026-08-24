@@ -61,209 +61,176 @@ function subtractRanges(parents: Span[], children: Span[]): Span[] {
   return result;
 }
 
-/**
- * Render a Go template string as HTML with nesting-level background colors,
- * matching the VS Code decorator logic exactly.
- *
- * @param theme "dark" or "light" — selects palette and page background.
- */
-export function renderColoredHtml(
-  source: string,
-  theme: Theme = "dark",
-): string {
-  const P = PALETTES[theme];
-  const PALETTE = P.levels;
-  const tokens = tokenize(source);
+type ColorPalette = typeof PALETTES.dark;
 
-  // ---- Step 0: find {{ }} block ranges so we can exclude interior text ----
-  const actionRanges: Span[] = [];
-  let ai = 0;
-  while (ai < tokens.length) {
-    if (tokens[ai].type !== TokenType.DelimOpen) {
-      ai++;
-      continue;
-    }
-    const as = tokens[ai].start;
-    ai++;
-    while (ai < tokens.length && tokens[ai].type !== TokenType.DelimClose) ai++;
-    if (ai < tokens.length) {
-      actionRanges.push({ start: as, end: tokens[ai].end });
-    }
-    ai++;
+function findActionSpans(tokens: ReturnType<typeof tokenize>): Span[] {
+  const out: Span[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    if (tokens[i].type !== TokenType.DelimOpen) { i++; continue; }
+    const start = tokens[i].start;
+    i++;
+    while (i < tokens.length && tokens[i].type !== TokenType.DelimClose) i++;
+    if (i < tokens.length) out.push({ start, end: tokens[i].end });
+    i++;
   }
-  function insideAction(pos: number): boolean {
-    return actionRanges.some((r) => pos >= r.start && pos < r.end);
-  }
+  return out;
+}
 
-  // ---- Step 1: nesting backgrounds from TEXT ONLY (between {{ }} ) ----
+function buildTextRangesByLevel(
+  tokens: ReturnType<typeof tokenize>,
+  actionSpans: Span[],
+): Map<number, Span[]> {
+  const insideAction = (pos: number) =>
+    actionSpans.some((r) => pos >= r.start && pos < r.end);
   const byLevel = new Map<number, Span[]>();
   for (const t of tokens) {
-    if (t.type !== TokenType.Text) continue;
-    if (t.nestingLevel === 0 || insideAction(t.start)) continue;
+    if (t.type !== TokenType.Text || t.nestingLevel === 0 || insideAction(t.start)) continue;
     const list = byLevel.get(t.nestingLevel) ?? [];
-    const prev = list[list.length - 1];
-    if (prev && t.start <= prev.end) {
-      if (t.end > prev.end) prev.end = t.end;
-    } else {
-      list.push({ start: t.start, end: t.end });
-    }
+    const prev = list.at(-1);
+    if (prev && t.start <= prev.end) { if (t.end > prev.end) prev.end = t.end; }
+    else list.push({ start: t.start, end: t.end });
     byLevel.set(t.nestingLevel, list);
   }
-
-  // Extend nesting ranges to cover intervening {{ }} blocks at the same level,
-  // so the background is continuous rather than split into 1px fragments.
   for (const [level, ranges] of byLevel) {
     ranges.sort((a, b) => a.start - b.start);
     const merged: Span[] = [];
     for (const r of ranges) {
-      const prev = merged[merged.length - 1];
-      // Merge if the gap between prev and current is filled only by a {{ }} block
-      // (check: is there any non-action text in the gap?)
-      if (prev) {
-        let hasOnlyAction = true;
-        for (const t of tokens) {
-          if (
+      const prev = merged.at(-1);
+      const gapIsAllAction =
+        prev !== undefined &&
+        !tokens.some(
+          (t) =>
             t.type === TokenType.Text &&
             !insideAction(t.start) &&
             t.start >= prev.end &&
-            t.start < r.start
-          ) {
-            hasOnlyAction = false;
-            break; // there's text at another level in the gap — don't merge
-          }
-        }
-        if (hasOnlyAction) {
-          prev.end = r.end; // merge: extend prev to cover the gap + current
-          continue;
-        }
-      }
+            t.start < r.start,
+        );
+      if (gapIsAllAction && prev) { prev.end = r.end; continue; }
       merged.push({ ...r });
     }
     byLevel.set(level, merged);
   }
-  const sortedLevels = [...byLevel.keys()].sort((a, b) => b - a);
+  return byLevel;
+}
+
+function computePaintedSpans(byLevel: Map<number, Span[]>): Map<number, Span[]> {
+  const sorted = [...byLevel.keys()].sort((a, b) => b - a);
   const painted = new Map<number, Span[]>();
-  for (const level of sortedLevels) {
+  for (const level of sorted) {
     let ranges = byLevel.get(level) ?? [];
-    for (const [childLevel, childRanges] of painted) {
-      if (childLevel <= level) continue;
-      ranges = subtractRanges(ranges, childRanges);
+    for (const [cl, cr] of painted) {
+      if (cl <= level) continue;
+      ranges = subtractRanges(ranges, cr);
     }
     if (ranges.length > 0) painted.set(level, ranges);
   }
+  return painted;
+}
 
-  // ---- Step 3: assign nesting color per position ----
-  const nestingBg: (string | null)[] = new Array(source.length).fill(null);
-  for (const [level, ranges] of painted) {
-    const color = PALETTE[level % PALETTE.length];
-    for (const r of ranges) {
-      for (let i = r.start; i < r.end; i++) nestingBg[i] = color;
-    }
+function buildNestingBg(painted: Map<number, Span[]>, palette: string[], len: number): (string | null)[] {
+  const bg: (string | null)[] = new Array(len).fill(null);
+  for (const [level, spans] of painted) {
+    const color = palette[level % palette.length];
+    for (const r of spans) for (let i = r.start; i < r.end; i++) bg[i] = color;
   }
+  return bg;
+}
 
-  // ---- Step 4: semantic coloring ----
-  // Control-flow actions and comments get a whole-block color; variables,
-  // function names, pipes, and field access get their own color on top.
-  const semanticBg: (string | null)[] = new Array(source.length).fill(null);
-
-  // Whole-block pass: comments + control-flow level chips.
+function fillBlockBg(
+  tokens: ReturnType<typeof tokenize>,
+  P: ColorPalette,
+  bg: (string | null)[],
+): void {
   let i = 0;
   while (i < tokens.length) {
-    if (tokens[i].type !== TokenType.DelimOpen) {
-      i++;
-      continue;
-    }
+    if (tokens[i].type !== TokenType.DelimOpen) { i++; continue; }
     const blockStart = tokens[i].start;
     i++;
     let ctrlLevel = 0;
     let hasCtrl = false;
     let hasComment = false;
     while (i < tokens.length && tokens[i].type !== TokenType.DelimClose) {
-      const t = tokens[i];
-      if (t.type === TokenType.Keyword) {
-        if (!hasCtrl) ctrlLevel = t.nestingLevel;
+      if (tokens[i].type === TokenType.Keyword) {
+        if (!hasCtrl) ctrlLevel = tokens[i].nestingLevel;
         hasCtrl = true;
-      } else if (t.type === TokenType.Comment) {
+      } else if (tokens[i].type === TokenType.Comment) {
         hasComment = true;
       }
       i++;
     }
     if (i < tokens.length) {
-      const blockEnd = tokens[i].end;
-      const color = hasComment
-        ? P.comment
-        : hasCtrl
-          ? PALETTE[ctrlLevel % PALETTE.length]
-          : null;
-      if (color) {
-        for (let k = blockStart; k < blockEnd; k++) semanticBg[k] = color;
-      }
+      const color = hasComment ? P.comment : hasCtrl ? P.levels[ctrlLevel % P.levels.length] : null;
+      if (color) for (let k = blockStart; k < tokens[i].end; k++) bg[k] = color;
     }
     i++;
   }
+}
 
-  // Token pass: variables, field access, function names, and pipes.
+function fillTokenBg(
+  tokens: ReturnType<typeof tokenize>,
+  P: ColorPalette,
+  bg: (string | null)[],
+): void {
   for (const t of tokens) {
     let color: string | null = null;
     switch (t.type) {
-      case TokenType.VariableDef:
-        color = P.varDef;
-        break;
-      case TokenType.VariableAssign:
-        color = P.varAssign;
-        break;
+      case TokenType.VariableDef:    color = P.varDef;    break;
+      case TokenType.VariableAssign: color = P.varAssign; break;
       case TokenType.VariableUse:
       case TokenType.Dot:
-      case TokenType.Field:
-        color = P.varUse;
-        break;
-      case TokenType.Function:
-        color = P.func;
-        break;
-      case TokenType.Pipe:
-        color = P.pipe;
-        break;
-      default:
-        break;
+      case TokenType.Field:          color = P.varUse;    break;
+      case TokenType.Function:       color = P.func;      break;
+      case TokenType.Pipe:           color = P.pipe;      break;
     }
-    if (color) {
-      for (let k = t.start; k < t.end; k++) semanticBg[k] = color;
-    }
+    if (color) for (let k = t.start; k < t.end; k++) bg[k] = color;
   }
+}
 
-  // ---- Step 5: build HTML ----
-  const escapes: Record<string, string> = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-  };
-  const esc = (ch: string) => escapes[ch] || ch;
+function buildSemanticBg(
+  tokens: ReturnType<typeof tokenize>,
+  P: ColorPalette,
+  len: number,
+): (string | null)[] {
+  const bg: (string | null)[] = new Array(len).fill(null);
+  fillBlockBg(tokens, P, bg);
+  fillTokenBg(tokens, P, bg);
+  return bg;
+}
 
+function renderHtmlBody(source: string, P: ColorPalette, nestingBg: (string | null)[], semanticBg: (string | null)[]): string {
+  const esc = (ch: string) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch] ?? ch);
   let html = `<pre style="background:${P.bg};color:${P.fg};padding:12px;font:13px monospace;line-height:1.5;margin:0">`;
   let pos = 0;
   while (pos < source.length) {
     const nb = nestingBg[pos];
     const bc = semanticBg[pos];
-
     let j = pos;
-    while (j < source.length && nestingBg[j] === nb && semanticBg[j] === bc)
-      j++;
-
-    const raw = source.slice(pos, j);
-    const text = raw.replace(/[&<>]/g, (c) => esc(c));
-
-    if (nb && bc) {
-      html += `<span style="background:${nb}"><span style="background:${bc}">${text}</span></span>`;
-    } else if (bc) {
-      html += `<span style="background:${bc}">${text}</span>`;
-    } else if (nb) {
-      html += `<span style="background:${nb}">${text}</span>`;
-    } else {
-      html += text;
-    }
+    while (j < source.length && nestingBg[j] === nb && semanticBg[j] === bc) j++;
+    const text = source.slice(pos, j).replace(/[&<>]/g, esc);
+    if (nb && bc)   html += `<span style="background:${nb}"><span style="background:${bc}">${text}</span></span>`;
+    else if (bc)    html += `<span style="background:${bc}">${text}</span>`;
+    else if (nb)    html += `<span style="background:${nb}">${text}</span>`;
+    else            html += text;
     pos = j;
   }
-  html += "</pre>";
-
-  return html;
+  return html + "</pre>";
 }
+
+/**
+ * Render a Go template string as HTML with nesting-level background colors,
+ * matching the VS Code decorator logic exactly.
+ *
+ * @param theme "dark" or "light" — selects palette and page background.
+ */
+export function renderColoredHtml(source: string, theme: Theme = "dark"): string {
+  const P = PALETTES[theme];
+  const tokens = tokenize(source);
+  const actionSpans = findActionSpans(tokens);
+  const byLevel = buildTextRangesByLevel(tokens, actionSpans);
+  const painted = computePaintedSpans(byLevel);
+  const nestingBg = buildNestingBg(painted, P.levels, source.length);
+  const semanticBg = buildSemanticBg(tokens, P, source.length);
+  return renderHtmlBody(source, P, nestingBg, semanticBg);
+}
+

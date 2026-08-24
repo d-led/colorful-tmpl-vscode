@@ -1,0 +1,10 @@
+{
+  "complexity": "Cyclomatic complexity ceiling per function.",
+  "max-depth": "Max nested block depth.",
+  "max-params": "Max parameters per function.",
+  "max-lines-per-function": "Max lines per function body.",
+  "max-nested-callbacks": "Max nested callback depth.",
+  "@typescript-eslint/prefer-optional-chain": "Prefer `?.` chains over manual null/undefined checks.",
+  "@typescript-eslint/prefer-readonly": "Flag private members never reassigned outside the constructor.",
+  "@typescript-eslint/no-explicit-any": "Flag explicit `any` usage."
+}

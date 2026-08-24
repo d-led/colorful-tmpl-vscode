@@ -33,11 +33,11 @@
     "approvals:view": "npm run approvals:glue && open packages/core/src/approved-dark.html"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
-    "@vitest/coverage-v8": "^4.1.9",
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "approvals": "^7.3.0",
-    "prettier": "^3.9.4",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "prettier": "^3.9.6",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.11"
   }
 }

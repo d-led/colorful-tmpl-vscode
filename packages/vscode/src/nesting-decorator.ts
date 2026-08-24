@@ -50,8 +50,275 @@ function subtractRanges(parents: Span[], children: Span[]): Span[] {
   return result;
 }
 
+function findActionRanges(
+  tokens: ReturnType<typeof tokenize>,
+): Span[] {
+  const actionRanges: Span[] = [];
+  let ai = 0;
+  while (ai < tokens.length) {
+    if (tokens[ai].type !== TokenType.DelimOpen) {
+      ai++;
+      continue;
+    }
+    const as = tokens[ai].start;
+    ai++;
+    while (ai < tokens.length && tokens[ai].type !== TokenType.DelimClose)
+      ai++;
+    if (ai < tokens.length) actionRanges.push({ start: as, end: tokens[ai].end });
+    ai++;
+  }
+  return actionRanges;
+}
+
+function groupTextRangesByLevel(
+  tokens: ReturnType<typeof tokenize>,
+  insideAction: (pos: number) => boolean,
+): Map<number, Span[]> {
+  const byLevel = new Map<number, Span[]>();
+  for (const t of tokens) {
+    if (t.type !== TokenType.Text) continue;
+    if (t.nestingLevel === 0 || insideAction(t.start)) continue;
+    const list = byLevel.get(t.nestingLevel) ?? [];
+    const prev = list.at(-1);
+    if (prev && t.start <= prev.end) {
+      if (t.end > prev.end) prev.end = t.end;
+    } else list.push({ start: t.start, end: t.end });
+    byLevel.set(t.nestingLevel, list);
+  }
+  return byLevel;
+}
+
+// True when no non-action text token falls between two positions, i.e. only a {{ }} block separates them.
+function onlyActionBetween(
+  tokens: ReturnType<typeof tokenize>,
+  insideAction: (pos: number) => boolean,
+  from: number,
+  to: number,
+): boolean {
+  return !tokens.some(
+    (t) =>
+      t.type === TokenType.Text &&
+      !insideAction(t.start) &&
+      t.start >= from &&
+      t.start < to,
+  );
+}
+
+function extendRangesAcrossActions(
+  ranges: Span[],
+  tokens: ReturnType<typeof tokenize>,
+  insideAction: (pos: number) => boolean,
+): Span[] {
+  const sorted = [...ranges].sort((a, b) => a.start - b.start);
+  const merged: Span[] = [];
+  for (const rr of sorted) {
+    const prev = merged.at(-1);
+    if (prev && onlyActionBetween(tokens, insideAction, prev.end, rr.start)) {
+      prev.end = rr.end;
+      continue;
+    }
+    merged.push({ ...rr });
+  }
+  return merged;
+}
+
+// Text-only nesting ranges per level, merged so adjacent same-level text spans (across a single
+// {{ }} action) become one contiguous range.
+function buildLevelTextRanges(
+  tokens: ReturnType<typeof tokenize>,
+  insideAction: (pos: number) => boolean,
+): Map<number, Span[]> {
+  const byLevel = groupTextRangesByLevel(tokens, insideAction);
+  for (const [level, ranges] of byLevel) {
+    byLevel.set(
+      level,
+      extendRangesAcrossActions(ranges, tokens, insideAction),
+    );
+  }
+  return byLevel;
+}
+
+// Deepest levels paint on top; shallower levels are clipped to the areas deeper levels don't cover.
+function computePaintedLevels(byLevel: Map<number, Span[]>): Map<number, Span[]> {
+  const sortedLevels = [...byLevel.keys()].sort((a, b) => b - a);
+  const painted = new Map<number, Span[]>();
+  for (const level of sortedLevels) {
+    let ranges = byLevel.get(level) ?? [];
+    for (const [cl, cr] of painted) {
+      if (cl <= level) continue;
+      ranges = subtractRanges(ranges, cr);
+    }
+    if (ranges.length > 0) painted.set(level, ranges);
+  }
+  return painted;
+}
+
+type SemanticRanges = {
+  varDef: vscode.Range[];
+  varAssign: vscode.Range[];
+  varUse: vscode.Range[];
+  func: vscode.Range[];
+  pipe: vscode.Range[];
+  comment: vscode.Range[];
+  ctrlByLevel: Map<number, vscode.Range[]>;
+};
+
+type ActionBlockInfo = {
+  range: vscode.Range;
+  ctrlLevel: number;
+  hasCtrl: boolean;
+  hasComment: boolean;
+};
+
+// Scans one {{ ... }} action's contents starting right after the opening delimiter token.
+function scanActionContents(
+  tokens: ReturnType<typeof tokenize>,
+  start: number,
+): { end: number; ctrlLevel: number; hasCtrl: boolean; hasComment: boolean } {
+  let j = start;
+  let ctrlLevel = 0;
+  let hasCtrl = false;
+  let hasComment = false;
+  while (j < tokens.length && tokens[j].type !== TokenType.DelimClose) {
+    const tt = tokens[j].type;
+    if (tt === TokenType.Keyword) {
+      if (!hasCtrl) ctrlLevel = tokens[j].nestingLevel;
+      hasCtrl = true;
+    } else if (tt === TokenType.Comment) {
+      hasComment = true;
+    }
+    j++;
+  }
+  return { end: j, ctrlLevel, hasCtrl, hasComment };
+}
+
+// Scans each {{ }} action once and reports whether it holds a control-flow keyword or a comment.
+function scanActionBlocks(
+  tokens: ReturnType<typeof tokenize>,
+  rng: (s: number, e: number) => vscode.Range,
+): ActionBlockInfo[] {
+  const blocks: ActionBlockInfo[] = [];
+  let j = 0;
+  while (j < tokens.length) {
+    if (tokens[j].type !== TokenType.DelimOpen) {
+      j++;
+      continue;
+    }
+    const bs = tokens[j].start;
+    const { end, ctrlLevel, hasCtrl, hasComment } = scanActionContents(
+      tokens,
+      j + 1,
+    );
+    j = end;
+    if (j < tokens.length) {
+      blocks.push({
+        range: rng(bs, tokens[j].end),
+        ctrlLevel,
+        hasCtrl,
+        hasComment,
+      });
+    }
+    j++;
+  }
+  return blocks;
+}
+
+// Whole-{{ }}-block pass: comments and control-flow level chips.
+function collectBlockRanges(
+  tokens: ReturnType<typeof tokenize>,
+  rng: (s: number, e: number) => vscode.Range,
+): Pick<SemanticRanges, "comment" | "ctrlByLevel"> {
+  const comment: vscode.Range[] = [];
+  const ctrlByLevel = new Map<number, vscode.Range[]>();
+  for (const block of scanActionBlocks(tokens, rng)) {
+    if (block.hasComment) comment.push(block.range);
+    else if (block.hasCtrl) {
+      const list = ctrlByLevel.get(block.ctrlLevel) ?? [];
+      list.push(block.range);
+      ctrlByLevel.set(block.ctrlLevel, list);
+    }
+  }
+  return { comment, ctrlByLevel };
+}
+
+// Token pass: variables, field access, function names, and pipes.
+function collectTokenRanges(
+  tokens: ReturnType<typeof tokenize>,
+  rng: (s: number, e: number) => vscode.Range,
+): Pick<SemanticRanges, "varDef" | "varAssign" | "varUse" | "func" | "pipe"> {
+  const varDef: vscode.Range[] = [];
+  const varAssign: vscode.Range[] = [];
+  const varUse: vscode.Range[] = [];
+  const func: vscode.Range[] = [];
+  const pipe: vscode.Range[] = [];
+  for (const t of tokens) {
+    switch (t.type) {
+      case TokenType.VariableDef:
+        varDef.push(rng(t.start, t.end));
+        break;
+      case TokenType.VariableAssign:
+        varAssign.push(rng(t.start, t.end));
+        break;
+      case TokenType.VariableUse:
+      case TokenType.Dot:
+      case TokenType.Field:
+        varUse.push(rng(t.start, t.end));
+        break;
+      case TokenType.Function:
+        func.push(rng(t.start, t.end));
+        break;
+      case TokenType.Pipe:
+        pipe.push(rng(t.start, t.end));
+        break;
+      default:
+        break;
+    }
+  }
+  return { varDef, varAssign, varUse, func, pipe };
+}
+
+// Merges nesting-level backgrounds and control-flow chips into per-palette-index range lists,
+// pre-seeded so every index gets cleared even when it has no ranges this pass.
+function buildPaletteIndexMap(
+  painted: Map<number, Span[]>,
+  ctrlByLevel: Map<number, vscode.Range[]>,
+  paletteSize: number,
+  rng: (s: number, e: number) => vscode.Range,
+): Map<number, vscode.Range[]> {
+  const byPaletteIndex = new Map<number, vscode.Range[]>();
+  for (let i = 0; i < paletteSize; i++) byPaletteIndex.set(i, []);
+  for (const [level, spans] of painted) {
+    const idx = level % paletteSize;
+    const list = byPaletteIndex.get(idx) ?? [];
+    list.push(...spans.map((s) => rng(s.start, s.end)));
+    byPaletteIndex.set(idx, list);
+  }
+  for (const [level, ranges] of ctrlByLevel) {
+    const idx = level % paletteSize;
+    const list = byPaletteIndex.get(idx) ?? [];
+    list.push(...ranges);
+    byPaletteIndex.set(idx, list);
+  }
+  return byPaletteIndex;
+}
+
+function singleUseColors(light: boolean) {
+  return {
+    varDef:    light ? "rgba(46,160,67,0.22)"    : "rgba(144,238,144,0.40)",
+    varAssign: light ? "rgba(230,126,34,0.28)"   : "rgba(255,183,77,0.45)",
+    varUse:    light ? "rgba(33,102,172,0.22)"   : "rgba(130,170,255,0.45)",
+    func:      light ? "rgba(124,77,255,0.20)"   : "rgba(198,160,246,0.45)",
+    pipe:      light ? "rgba(0,131,143,0.24)"    : "rgba(128,222,234,0.50)",
+    comment:   light ? "rgba(160,160,160,0.18)"  : "rgba(140,140,140,0.20)",
+  };
+}
+
 export class NestingDecorator {
-  private levelDecorations = new Map<number, vscode.TextEditorDecorationType>();
+  private readonly levelDecorations = new Map<
+    number,
+    vscode.TextEditorDecorationType
+  >();
+  private readonly disposables: vscode.Disposable[] = [];
   private varDefDeco!: vscode.TextEditorDecorationType;
   private varAssignDeco!: vscode.TextEditorDecorationType;
   private varUseDeco!: vscode.TextEditorDecorationType;
@@ -59,13 +326,12 @@ export class NestingDecorator {
   private pipeDeco!: vscode.TextEditorDecorationType;
   private commentDeco!: vscode.TextEditorDecorationType;
   private timeout: ReturnType<typeof setTimeout> | undefined;
-  private disposables: vscode.Disposable[] = [];
 
   constructor() {
     this.rebuildDecorations();
   }
 
-  private rebuildDecorations(): void {
+  private disposeDecorations(): void {
     for (const d of this.levelDecorations.values()) d.dispose();
     this.varDefDeco?.dispose();
     this.varAssignDeco?.dispose();
@@ -74,17 +340,16 @@ export class NestingDecorator {
     this.pipeDeco?.dispose();
     this.commentDeco?.dispose();
     this.levelDecorations.clear();
+  }
+
+  private rebuildDecorations(): void {
+    this.disposeDecorations();
 
     const light = isLightTheme();
     const palette: string[] = vscode.workspace
       .getConfiguration(CFG)
       .get("palette", light ? PALETTES.light : PALETTES.dark);
-    const varDef = light ? "rgba(46,160,67,0.22)" : "rgba(144,238,144,0.40)";
-    const varAssign = light ? "rgba(230,126,34,0.28)" : "rgba(255,183,77,0.45)";
-    const varUse = light ? "rgba(33,102,172,0.22)" : "rgba(130,170,255,0.45)";
-    const func = light ? "rgba(124,77,255,0.20)" : "rgba(198,160,246,0.45)";
-    const pipe = light ? "rgba(0,131,143,0.24)" : "rgba(128,222,234,0.50)";
-    const comment = light ? "rgba(160,160,160,0.18)" : "rgba(140,140,140,0.20)";
+    const colors = singleUseColors(light);
 
     const mk = (bg: string) =>
       vscode.window.createTextEditorDecorationType({
@@ -94,12 +359,12 @@ export class NestingDecorator {
       });
     for (let i = 0; i < palette.length; i++)
       this.levelDecorations.set(i, mk(palette[i]));
-    this.varDefDeco = mk(varDef);
-    this.varAssignDeco = mk(varAssign);
-    this.varUseDeco = mk(varUse);
-    this.funcDeco = mk(func);
-    this.pipeDeco = mk(pipe);
-    this.commentDeco = mk(comment);
+    this.varDefDeco = mk(colors.varDef);
+    this.varAssignDeco = mk(colors.varAssign);
+    this.varUseDeco = mk(colors.varUse);
+    this.funcDeco = mk(colors.func);
+    this.pipeDeco = mk(colors.pipe);
+    this.commentDeco = mk(colors.comment);
   }
 
   activate(): void {
@@ -113,6 +378,15 @@ export class NestingDecorator {
       }),
       vscode.window.onDidChangeActiveTextEditor((ed) => {
         if (ed?.document.languageId === LANG) this.updateDecorations(ed);
+      }),
+      // onDidOpenTextDocument fires when a document is opened or its language changes.
+      // VS Code updates ed.document before firing, so URI comparison is sufficient.
+      vscode.workspace.onDidOpenTextDocument((doc) => {
+        if (doc.languageId !== LANG) return;
+        const uri = doc.uri.toString();
+        for (const ed of vscode.window.visibleTextEditors) {
+          if (ed.document.uri.toString() === uri) this.updateDecorations(ed);
+        }
       }),
       // Newly opened/split/moved editors don't always trigger onDidChangeActiveTextEditor
       // (e.g. a background tab restored at startup, or a diff/split view) — catch those too.
@@ -130,13 +404,15 @@ export class NestingDecorator {
         }
       }),
     );
+    // onStartupFinished guarantees activate() runs after VS Code is fully initialized;
+    // onDidChangeVisibleTextEditors handles editors that become visible after activate().
     for (const ed of vscode.window.visibleTextEditors) {
       if (ed.document.languageId === LANG) this.updateDecorations(ed);
     }
   }
 
   private scheduleUpdate(editor: vscode.TextEditor | undefined): void {
-    if (!editor || editor.document.languageId !== LANG) return;
+    if (editor?.document.languageId !== LANG) return;
     if (this.timeout) clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
       this.timeout = undefined;
@@ -159,173 +435,37 @@ export class NestingDecorator {
         editor.document.positionAt(e),
       );
 
-    // ---- Step 0: find {{ }} ranges to exclude interior text ----
-    const actionRanges: Span[] = [];
-    let ai = 0;
-    while (ai < tokens.length) {
-      if (tokens[ai].type !== TokenType.DelimOpen) {
-        ai++;
-        continue;
-      }
-      const as = tokens[ai].start;
-      ai++;
-      while (ai < tokens.length && tokens[ai].type !== TokenType.DelimClose)
-        ai++;
-      if (ai < tokens.length)
-        actionRanges.push({ start: as, end: tokens[ai].end });
-      ai++;
-    }
+    const actionRanges = findActionRanges(tokens);
     const insideAction = (pos: number) =>
       actionRanges.some((r) => pos >= r.start && pos < r.end);
 
-    // ---- nesting backgrounds from TEXT ONLY ----
-    const byLevel = new Map<number, Span[]>();
-    for (const t of tokens) {
-      if (t.type !== TokenType.Text) continue;
-      if (t.nestingLevel === 0 || insideAction(t.start)) continue;
-      const list = byLevel.get(t.nestingLevel) ?? [];
-      const prev = list[list.length - 1];
-      if (prev && t.start <= prev.end) {
-        if (t.end > prev.end) prev.end = t.end;
-      } else list.push({ start: t.start, end: t.end });
-      byLevel.set(t.nestingLevel, list);
-    }
-    // Extend nesting ranges to cover intervening {{ }} blocks at the same level.
-    for (const [level, ranges] of byLevel) {
-      ranges.sort((a, b) => a.start - b.start);
-      const merged: Span[] = [];
-      for (const rr of ranges) {
-        const prev = merged[merged.length - 1];
-        if (prev) {
-          let hasOnlyAction = true;
-          for (const t of tokens) {
-            if (
-              t.type === TokenType.Text &&
-              !insideAction(t.start) &&
-              t.start >= prev.end &&
-              t.start < rr.start
-            ) {
-              hasOnlyAction = false;
-              break;
-            }
-          }
-          if (hasOnlyAction) {
-            prev.end = rr.end;
-            continue;
-          }
-        }
-        merged.push({ ...rr });
-      }
-      byLevel.set(level, merged);
-    }
+    const byLevel = buildLevelTextRanges(tokens, insideAction);
+    const painted = computePaintedLevels(byLevel);
+    const { comment, ctrlByLevel } = collectBlockRanges(tokens, rng);
+    const { varDef, varAssign, varUse, func, pipe } = collectTokenRanges(
+      tokens,
+      rng,
+    );
+    const byPaletteIndex = buildPaletteIndexMap(
+      painted,
+      ctrlByLevel,
+      paletteSize,
+      rng,
+    );
 
-    const sortedLevels = [...byLevel.keys()].sort((a, b) => b - a);
-    const painted = new Map<number, Span[]>();
-    for (const level of sortedLevels) {
-      let ranges = byLevel.get(level) ?? [];
-      for (const [cl, cr] of painted) {
-        if (cl <= level) continue;
-        ranges = subtractRanges(ranges, cr);
-      }
-      if (ranges.length > 0) painted.set(level, ranges);
-    }
-    // ---- semantic coloring: control-flow, comments, variables, functions ----
-    const vd: vscode.Range[] = [],
-      va: vscode.Range[] = [],
-      vu: vscode.Range[] = [],
-      f: vscode.Range[] = [],
-      p: vscode.Range[] = [],
-      c: vscode.Range[] = [];
-    const ctrlByLevel = new Map<number, vscode.Range[]>();
-
-    // Whole-block pass: comments and control-flow level chips.
-    let j = 0;
-    while (j < tokens.length) {
-      if (tokens[j].type !== TokenType.DelimOpen) {
-        j++;
-        continue;
-      }
-      const bs = tokens[j].start;
-      j++;
-      let ctrlLevel = 0;
-      let hasCtrl = false;
-      let hasComment = false;
-      while (j < tokens.length && tokens[j].type !== TokenType.DelimClose) {
-        const tt = tokens[j].type;
-        if (tt === TokenType.Keyword) {
-          if (!hasCtrl) ctrlLevel = tokens[j].nestingLevel;
-          hasCtrl = true;
-        } else if (tt === TokenType.Comment) {
-          hasComment = true;
-        }
-        j++;
-      }
-      if (j < tokens.length) {
-        const be = tokens[j].end;
-        const rr = rng(bs, be);
-        if (hasComment) c.push(rr);
-        else if (hasCtrl) {
-          const list = ctrlByLevel.get(ctrlLevel) ?? [];
-          list.push(rr);
-          ctrlByLevel.set(ctrlLevel, list);
-        }
-      }
-      j++;
-    }
-
-    // Token pass: variables, field access, function names, and pipes.
-    for (const t of tokens) {
-      switch (t.type) {
-        case TokenType.VariableDef:
-          vd.push(rng(t.start, t.end));
-          break;
-        case TokenType.VariableAssign:
-          va.push(rng(t.start, t.end));
-          break;
-        case TokenType.VariableUse:
-        case TokenType.Dot:
-        case TokenType.Field:
-          vu.push(rng(t.start, t.end));
-          break;
-        case TokenType.Function:
-          f.push(rng(t.start, t.end));
-          break;
-        case TokenType.Pipe:
-          p.push(rng(t.start, t.end));
-          break;
-        default:
-          break;
-      }
-    }
-
-    // ---- level decorations: text backgrounds + control-flow actions ----
-    // Pre-seed every palette index so indices with no ranges this pass still get cleared below.
-    const byPaletteIndex = new Map<number, vscode.Range[]>();
-    for (let i = 0; i < paletteSize; i++) byPaletteIndex.set(i, []);
-    for (const [level, spans] of painted) {
-      const idx = level % paletteSize;
-      const list = byPaletteIndex.get(idx) ?? [];
-      list.push(...spans.map((s) => rng(s.start, s.end)));
-      byPaletteIndex.set(idx, list);
-    }
-    for (const [level, ranges] of ctrlByLevel) {
-      const idx = level % paletteSize;
-      const list = byPaletteIndex.get(idx) ?? [];
-      list.push(...ranges);
-      byPaletteIndex.set(idx, list);
-    }
     for (const [idx, ranges] of byPaletteIndex) {
       const d = this.levelDecorations.get(idx);
       if (d) editor.setDecorations(d, ranges);
     }
 
-    editor.setDecorations(this.commentDeco, c);
-    editor.setDecorations(this.varDefDeco, vd);
-    editor.setDecorations(this.varAssignDeco, va);
-    editor.setDecorations(this.varUseDeco, vu);
-    editor.setDecorations(this.funcDeco, f);
-    editor.setDecorations(this.pipeDeco, p);
+    editor.setDecorations(this.commentDeco, comment);
+    editor.setDecorations(this.varDefDeco, varDef);
+    editor.setDecorations(this.varAssignDeco, varAssign);
+    editor.setDecorations(this.varUseDeco, varUse);
+    editor.setDecorations(this.funcDeco, func);
+    editor.setDecorations(this.pipeDeco, pipe);
   }
+
 
   private clearDecorations(editor: vscode.TextEditor): void {
     for (const d of this.levelDecorations.values())
