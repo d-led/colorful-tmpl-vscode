@@ -60,6 +60,21 @@ For any other language, add it to `colorful-tmpl.rainbow.additionalLanguages`.
 | `@colorful-tmpl/highlight-core` | Editor-agnostic Go template lexer with nesting tracking |
 | `colorful-tmpl` (VS Code) | Grammars + rainbow decorator extension |
 
+## Installation
+
+The extension is not yet published to the VS Code Marketplace. Install directly from source:
+
+```bash
+git clone https://github.com/d-led/colorful-trees-forest.git
+cd colorful-trees-forest
+npm install
+scripts/install-here.sh
+```
+
+`install-here.sh` builds the core and extension, packages a `.vsix`, and installs it into whichever VS Code window ran the command. Reload the window (`Developer: Reload Window`) to activate.
+
+To uninstall: `scripts/install-here.sh --uninstall`
+
 ## Development
 
 ```bash
