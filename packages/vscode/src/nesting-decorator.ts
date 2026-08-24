@@ -105,22 +105,34 @@ export class NestingDecorator {
   activate(): void {
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (e.document.languageId === LANG)
-          this.scheduleUpdate(vscode.window.activeTextEditor);
+        if (e.document.languageId === LANG) {
+          for (const ed of vscode.window.visibleTextEditors) {
+            if (ed.document === e.document) this.scheduleUpdate(ed);
+          }
+        }
       }),
       vscode.window.onDidChangeActiveTextEditor((ed) => {
         if (ed?.document.languageId === LANG) this.updateDecorations(ed);
       }),
+      // Newly opened/split/moved editors don't always trigger onDidChangeActiveTextEditor
+      // (e.g. a background tab restored at startup, or a diff/split view) — catch those too.
+      vscode.window.onDidChangeVisibleTextEditors((editors) => {
+        for (const ed of editors) {
+          if (ed.document.languageId === LANG) this.updateDecorations(ed);
+        }
+      }),
       vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration(CFG)) {
           this.rebuildDecorations();
-          const ed = vscode.window.activeTextEditor;
-          if (ed?.document.languageId === LANG) this.updateDecorations(ed);
+          for (const ed of vscode.window.visibleTextEditors) {
+            if (ed.document.languageId === LANG) this.updateDecorations(ed);
+          }
         }
       }),
     );
-    const ed = vscode.window.activeTextEditor;
-    if (ed?.document.languageId === LANG) this.updateDecorations(ed);
+    for (const ed of vscode.window.visibleTextEditors) {
+      if (ed.document.languageId === LANG) this.updateDecorations(ed);
+    }
   }
 
   private scheduleUpdate(editor: vscode.TextEditor | undefined): void {
@@ -287,7 +299,9 @@ export class NestingDecorator {
     }
 
     // ---- level decorations: text backgrounds + control-flow actions ----
+    // Pre-seed every palette index so indices with no ranges this pass still get cleared below.
     const byPaletteIndex = new Map<number, vscode.Range[]>();
+    for (let i = 0; i < paletteSize; i++) byPaletteIndex.set(i, []);
     for (const [level, spans] of painted) {
       const idx = level % paletteSize;
       const list = byPaletteIndex.get(idx) ?? [];
