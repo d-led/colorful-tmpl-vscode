@@ -19,16 +19,19 @@ export class ColorfulTmplSemanticTokensProvider
 
   provideDocumentSemanticTokens(
     document: vscode.TextDocument,
-  ): vscode.SemanticTokens {
+    token: vscode.CancellationToken,
+  ): vscode.SemanticTokens | null {
     const builder = new vscode.SemanticTokensBuilder(this.legend);
     const source = document.getText();
+    if (token.isCancellationRequested) return null;
     const tokens = tokenize(source);
 
-    for (const token of tokens) {
-      const startPos = document.positionAt(token.start);
-      const endPos = document.positionAt(token.end);
+    for (const tok of tokens) {
+      if (token.isCancellationRequested) return null;
+      const startPos = document.positionAt(tok.start);
+      const endPos = document.positionAt(tok.end);
 
-      switch (token.type) {
+      switch (tok.type) {
         case TokenType.Keyword:
           builder.push(new vscode.Range(startPos, endPos), "keyword");
           break;

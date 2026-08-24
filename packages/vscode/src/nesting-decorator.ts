@@ -10,17 +10,6 @@ const INJECTION_LANGS = new Set([
   "cmake", "sql", "python", "shellscript", "toml", "ruby", "go", "nginx",
 ]);
 
-function activeLanguages(): Set<string> {
-  const extra = vscode.workspace
-    .getConfiguration(CFG)
-    .get<string[]>("additionalLanguages", []);
-  return new Set([LANG, ...INJECTION_LANGS, ...extra]);
-}
-
-function isActiveLanguage(languageId: string): boolean {
-  return activeLanguages().has(languageId);
-}
-
 type Span = { start: number; end: number };
 
 const PALETTES = {
@@ -65,26 +54,6 @@ function subtractRanges(parents: Span[], children: Span[]): Span[] {
     result = next;
   }
   return result;
-}
-
-function findActionRanges(
-  tokens: ReturnType<typeof tokenize>,
-): Span[] {
-  const actionRanges: Span[] = [];
-  let ai = 0;
-  while (ai < tokens.length) {
-    if (tokens[ai].type !== TokenType.DelimOpen) {
-      ai++;
-      continue;
-    }
-    const as = tokens[ai].start;
-    ai++;
-    while (ai < tokens.length && tokens[ai].type !== TokenType.DelimClose)
-      ai++;
-    if (ai < tokens.length) actionRanges.push({ start: as, end: tokens[ai].end });
-    ai++;
-  }
-  return actionRanges;
 }
 
 function groupTextRangesByLevel(
@@ -330,22 +299,50 @@ function singleUseColors(light: boolean) {
   };
 }
 
+function buildActionMask(tokens: ReturnType<typeof tokenize>, len: number): Uint8Array {
+  const mask = new Uint8Array(len);
+  let i = 0;
+  while (i < tokens.length) {
+    if (tokens[i].type !== TokenType.DelimOpen) { i++; continue; }
+    const start = tokens[i].start;
+    i++;
+    while (i < tokens.length && tokens[i].type !== TokenType.DelimClose) i++;
+    if (i < tokens.length) mask.fill(1, start, tokens[i].end);
+    i++;
+  }
+  return mask;
+}
+
 export class NestingDecorator {
   private readonly levelDecorations = new Map<
     number,
     vscode.TextEditorDecorationType
   >();
   private readonly disposables: vscode.Disposable[] = [];
+  // Per-editor debounce timers keyed by document URI; avoids one timer clobbering another.
+  private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
+  private cachedLanguages: Set<string> = new Set([LANG, ...INJECTION_LANGS]);
   private varDefDeco!: vscode.TextEditorDecorationType;
   private varAssignDeco!: vscode.TextEditorDecorationType;
   private varUseDeco!: vscode.TextEditorDecorationType;
   private funcDeco!: vscode.TextEditorDecorationType;
   private pipeDeco!: vscode.TextEditorDecorationType;
   private commentDeco!: vscode.TextEditorDecorationType;
-  private timeout: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
     this.rebuildDecorations();
+    this.refreshLanguageCache();
+  }
+
+  private refreshLanguageCache(): void {
+    const extra = vscode.workspace
+      .getConfiguration(CFG)
+      .get<string[]>("additionalLanguages", []);
+    this.cachedLanguages = new Set([LANG, ...INJECTION_LANGS, ...extra]);
+  }
+
+  private isActive(languageId: string): boolean {
+    return this.cachedLanguages.has(languageId);
   }
 
   private disposeDecorations(): void {
@@ -385,38 +382,40 @@ export class NestingDecorator {
   }
 
   activate(): void {
+    // Re-read config in case it changed between construction and this call.
+    this.refreshLanguageCache();
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (isActiveLanguage(e.document.languageId)) {
+        if (this.isActive(e.document.languageId)) {
           for (const ed of vscode.window.visibleTextEditors) {
             if (ed.document === e.document) this.scheduleUpdate(ed);
           }
         }
       }),
       vscode.window.onDidChangeActiveTextEditor((ed) => {
-        if (ed && isActiveLanguage(ed.document.languageId)) this.updateDecorations(ed);
+        if (ed && this.isActive(ed.document.languageId)) this.updateDecorations(ed);
       }),
       // onDidOpenTextDocument fires when a document is opened or its language changes.
       // VS Code updates ed.document before firing, so URI comparison is sufficient.
       vscode.workspace.onDidOpenTextDocument((doc) => {
-        if (!isActiveLanguage(doc.languageId)) return;
+        if (!this.isActive(doc.languageId)) return;
         const uri = doc.uri.toString();
         for (const ed of vscode.window.visibleTextEditors) {
           if (ed.document.uri.toString() === uri) this.updateDecorations(ed);
         }
       }),
-      // Newly opened/split/moved editors don't always trigger onDidChangeActiveTextEditor
-      // (e.g. a background tab restored at startup, or a diff/split view) — catch those too.
+      // Debounce resize/zoom: onDidChangeVisibleTextEditors fires continuously during those.
       vscode.window.onDidChangeVisibleTextEditors((editors) => {
         for (const ed of editors) {
-          if (isActiveLanguage(ed.document.languageId)) this.updateDecorations(ed);
+          if (this.isActive(ed.document.languageId)) this.scheduleUpdate(ed);
         }
       }),
       vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration(CFG)) {
+          this.refreshLanguageCache();
           this.rebuildDecorations();
           for (const ed of vscode.window.visibleTextEditors) {
-            if (isActiveLanguage(ed.document.languageId)) this.updateDecorations(ed);
+            if (this.isActive(ed.document.languageId)) this.updateDecorations(ed);
           }
         }
       }),
@@ -424,17 +423,19 @@ export class NestingDecorator {
     // onStartupFinished guarantees activate() runs after VS Code is fully initialized;
     // onDidChangeVisibleTextEditors handles editors that become visible after activate().
     for (const ed of vscode.window.visibleTextEditors) {
-      if (isActiveLanguage(ed.document.languageId)) this.updateDecorations(ed);
+      if (this.isActive(ed.document.languageId)) this.updateDecorations(ed);
     }
   }
 
-  private scheduleUpdate(editor: vscode.TextEditor | undefined): void {
-    if (!editor || !isActiveLanguage(editor.document.languageId)) return;
-    if (this.timeout) clearTimeout(this.timeout);
-    this.timeout = setTimeout(() => {
-      this.timeout = undefined;
+  private scheduleUpdate(editor: vscode.TextEditor): void {
+    if (!this.isActive(editor.document.languageId)) return;
+    const key = editor.document.uri.toString();
+    const existing = this.timers.get(key);
+    if (existing) clearTimeout(existing);
+    this.timers.set(key, setTimeout(() => {
+      this.timers.delete(key);
       this.updateDecorations(editor);
-    }, 150);
+    }, 150));
   }
 
   private updateDecorations(editor: vscode.TextEditor): void {
@@ -457,9 +458,8 @@ export class NestingDecorator {
         editor.document.positionAt(e),
       );
 
-    const actionRanges = findActionRanges(tokens);
-    const insideAction = (pos: number) =>
-      actionRanges.some((r) => pos >= r.start && pos < r.end);
+    const actionMask = buildActionMask(tokens, source.length);
+    const insideAction = (pos: number) => actionMask[pos] === 1;
 
     const byLevel = buildLevelTextRanges(tokens, insideAction);
     const painted = computePaintedLevels(byLevel);
@@ -501,7 +501,8 @@ export class NestingDecorator {
   }
 
   dispose(): void {
-    if (this.timeout) clearTimeout(this.timeout);
+    for (const t of this.timers.values()) clearTimeout(t);
+    this.timers.clear();
     for (const d of this.disposables) d.dispose();
     for (const d of this.levelDecorations.values()) d.dispose();
     this.varDefDeco?.dispose();
