@@ -4,6 +4,8 @@
 
 ## What it does
 
+![colorful go template syntax highlighting screenshot](./docs/img/screenshot.png)
+
 - **Rainbow backgrounds** — each nesting level (`if`/`range`/`with`/`define`) gets a distinct background color, rotating through 6 levels.
 - **Variable spotting** — `$x :=` definitions glow green, `$x =` assignments glow orange, `$x` uses glow blue.
 - **TextMate grammar** — foreground scope coloring in diff/peek views.

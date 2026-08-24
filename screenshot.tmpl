@@ -1,0 +1,18 @@
+{{- $tag := or .Tag "latest" -}}
+services: {{len .Services}} (tag: {{$tag}}, env: {{$.Env}})
+{{- range $i, $svc := .Services}}
+  {{- if $svc.Enabled}}
+  - {{$svc.Name}}: {{printf "%s:%s" $svc.Image $tag}}
+    {{- with $svc.Config}}
+    {{- if and .TLS (eq .Protocol "https")}}
+    tls: true   port: {{.Port}}   cert: {{$svc.Name}}.crt
+    {{- else if eq .Protocol "grpc"}}
+    tls: false  port: {{.Port}}   proto: grpc
+    {{- else}}
+    tls: false  port: {{.Port}}
+    {{- end}}
+    {{- end}}
+  {{- else}}
+  - {{$svc.Name}}: disabled
+  {{- end}}
+{{- end}}
