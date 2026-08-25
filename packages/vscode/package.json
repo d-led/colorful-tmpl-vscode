@@ -50,6 +50,7 @@
       {
         "scopeName": "colorful-tmpl.injection",
         "path": "./syntaxes/gotmpl-injection.json",
+        "injectTo": ["source", "text"],
         "embeddedLanguages": {
           "meta.embedded.block.gotmpl": "colorful-tmpl"
         }

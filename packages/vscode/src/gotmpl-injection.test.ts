@@ -12,6 +12,16 @@ function injectionSelector(): string {
   return grammar.injectionSelector as string;
 }
 
+/** Scope names the injection grammar is registered for in package.json (`injectTo`). */
+function packageInjectTo(): string[] {
+  const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8"));
+  const grammar = pkg.contributes.grammars.find(
+    (g: { scopeName?: string }) => g.scopeName === "colorful-tmpl.injection",
+  );
+  if (!grammar?.injectTo) throw new Error("injectTo not found in package.json");
+  return grammar.injectTo as string[];
+}
+
 type SelectorAtom = { scope: string; exclusions: string[] };
 
 function selectorAtoms(selector: string): SelectorAtom[] {
@@ -38,5 +48,12 @@ describe("gotmpl injection grammar", () => {
       expect(atom.exclusions).toContain("comment");
       expect(atom.exclusions).toContain("string");
     }
+  });
+
+  it("is registered (injectTo) for the same scopes it selects", () => {
+    // VS Code only applies an injection grammar to scopes listed in `injectTo`;
+    // the grammar file's `injectionSelector` alone is not enough to register it.
+    const scopes = selectorAtoms(injectionSelector()).map((atom) => atom.scope);
+    expect(packageInjectTo()).toEqual(scopes);
   });
 });

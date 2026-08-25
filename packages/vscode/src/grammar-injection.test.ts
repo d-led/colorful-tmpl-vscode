@@ -26,6 +26,8 @@ const pkgRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const injectionGrammar = JSON.parse(
   readFileSync(join(pkgRoot, "syntaxes", "gotmpl-injection.json"), "utf8"),
 ) as IRawGrammar;
+// Vendored, unmodified fixture from Red Hat's vscode-java repo (EPL-2.0).
+// See fixtures/grammars/NOTICE.md for source, commit, and license.
 const javaGrammar = JSON.parse(
   readFileSync(join(pkgRoot, "fixtures", "grammars", "java.tmLanguage.json"), "utf8"),
 ) as IRawGrammar;
