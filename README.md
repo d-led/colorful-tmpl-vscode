@@ -10,7 +10,7 @@
 - **Variable spotting** — `$x :=` definitions glow green, `$x =` assignments glow orange, `$x` uses glow blue.
 - **TextMate grammar** — foreground scope coloring in diff/peek views.
 - **Semantic tokens** — variable definitions vs. uses are classified so themes can style them.
-- **Injection grammar** — `{{ }}` actions are highlighted and rainbow-decorated inside any supported host language without losing that language's own syntax coloring.
+- **Injection grammar** — `{{ }}` actions are highlighted and rainbow-decorated inside any host language without losing that language's own syntax coloring.
 
 ## Which language mode to choose
 
@@ -82,11 +82,29 @@ To uninstall: `scripts/install-here.sh --uninstall`
 ## Development
 
 ```bash
-npm install
-npm test                        # run all tests
+npm install                     # install workspace dependencies
+npm test                        # run unit tests (vitest)
+npm run test:watch              # run unit tests in watch mode
+npm run test:vscode             # run VS Code integration tests (Extension Development Host)
+npm run typecheck               # type-check all packages (tsc -b)
 npm run build                   # build core + extension
+npm run format                  # format sources with prettier
+npm run format:check            # check formatting
 scripts/install-here.sh         # build, package and install into current editor
 scripts/analyze.ts.sh           # run refactoring metrics lint
+```
+
+`npm run test:vscode` downloads a VS Code build by default. Point `VSCODE_TEST_PATH` at an installed copy to skip the download (e.g. `VSCODE_TEST_PATH="/Applications/Visual Studio Code.app"`), or set `VSCODE_TEST_VERSION` to a release like `stable`, `insiders`, or `1.95.0`.
+
+### Approval tests
+
+The HTML renderer is pinned by approval tests that snapshot both light and dark output. When a change intentionally alters the rendered HTML, review and accept the new snapshots:
+
+```bash
+npm run approvals:test          # run approval tests and glue snapshots into HTML
+npm run approvals:view          # open the glued HTML for visual review
+npm run approvals:approve:all   # accept all pending snapshots
+npm run approvals:reject:all    # discard all pending snapshots
 ```
 
 ## License

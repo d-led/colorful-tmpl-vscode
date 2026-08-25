@@ -1,0 +1,7 @@
+public class Greeting {
+    public static void main(String[] args) {
+        {{- if .ShowGreeting }}
+        System.out.println("Hello");
+        {{- end }}
+    }
+}

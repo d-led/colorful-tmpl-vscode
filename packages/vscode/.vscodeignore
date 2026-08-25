@@ -1,6 +1,9 @@
 .vscode/**
+.vscode-test/**
+.vscode-test.mjs
 src/**
 dist/test/**
+fixtures/**
 test-results/**
 **/*.tsbuildinfo
 tsconfig*.json

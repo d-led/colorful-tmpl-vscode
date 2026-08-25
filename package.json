@@ -24,6 +24,7 @@
     "test": "vitest run -c vitest.config.ts",
     "test:watch": "vitest -c vitest.config.ts",
     "test:coverage": "vitest run -c vitest.config.ts --coverage",
+    "test:vscode": "bash scripts/test-vscode-extension.sh",
     "vscode:package": "npm run build -w colorful-tmpl && cd packages/vscode && npx vsce package --no-dependencies",
     "vscode:install": "npm run build -w colorful-tmpl && cd packages/vscode && npx vsce package --no-dependencies && code --install-extension *.vsix",
     "approvals:test": "vitest run packages/core/src/render-html.approval.test.ts; npm run approvals:glue",

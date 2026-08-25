@@ -140,16 +140,23 @@
     "build": "node esbuild.extension.mjs",
     "clean": "rm -rf dist",
     "package": "npm run build && npx vsce package --no-dependencies",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:vscode": "tsc -p tsconfig.tests.json && vscode-test"
   },
   "devDependencies": {
     "@colorful-tmpl/highlight-core": "0.1.1",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.95.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
     "@vscode/vsce": "^3.0.0",
     "esbuild": "^0.25.0",
     "eslint": "^9.0.0",
+    "mocha": "^11.8.0",
     "typescript-eslint": "^8.0.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
   }
 }

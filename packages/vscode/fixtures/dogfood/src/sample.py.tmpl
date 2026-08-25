@@ -1,0 +1,6 @@
+def greet(name):
+    return "Hello, " + name
+
+{{- if .ShowGreeting }}
+print(greet("world"))
+{{- end }}
