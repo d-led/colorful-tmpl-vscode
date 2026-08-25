@@ -4,23 +4,6 @@ import * as vscode from "vscode";
 const LANG = "colorful-tmpl";
 const CFG = "colorful-tmpl.rainbow";
 
-// Must mirror the injectTo list in package.json — these languages get rainbow decorations automatically.
-const INJECTION_LANGS = new Set([
-  "yaml",
-  "json",
-  "html",
-  "xml",
-  "markdown",
-  "cmake",
-  "sql",
-  "python",
-  "shellscript",
-  "toml",
-  "ruby",
-  "go",
-  "nginx",
-]);
-
 type Span = { start: number; end: number };
 
 const PALETTES = {
@@ -337,7 +320,6 @@ export class NestingDecorator {
   private readonly disposables: vscode.Disposable[] = [];
   // Per-editor debounce timers keyed by document URI; avoids one timer clobbering another.
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
-  private cachedLanguages: Set<string> = new Set([LANG, ...INJECTION_LANGS]);
   private varDefDeco!: vscode.TextEditorDecorationType;
   private varAssignDeco!: vscode.TextEditorDecorationType;
   private varUseDeco!: vscode.TextEditorDecorationType;
@@ -347,18 +329,6 @@ export class NestingDecorator {
 
   constructor() {
     this.rebuildDecorations();
-    this.refreshLanguageCache();
-  }
-
-  private refreshLanguageCache(): void {
-    const extra = vscode.workspace
-      .getConfiguration(CFG)
-      .get<string[]>("additionalLanguages", []);
-    this.cachedLanguages = new Set([LANG, ...INJECTION_LANGS, ...extra]);
-  }
-
-  private isActive(languageId: string): boolean {
-    return this.cachedLanguages.has(languageId);
   }
 
   private disposeDecorations(): void {
@@ -376,10 +346,20 @@ export class NestingDecorator {
     this.disposeDecorations();
 
     const light = isLightTheme();
-    const palette: string[] = vscode.workspace
-      .getConfiguration(CFG)
-      .get("palette", light ? PALETTES.light : PALETTES.dark);
-    const colors = singleUseColors(light);
+    const cfg = vscode.workspace.getConfiguration(CFG);
+    const palette: string[] = cfg.get(
+      "palette",
+      light ? PALETTES.light : PALETTES.dark,
+    );
+    const builtIn = singleUseColors(light);
+    const colors = {
+      varDef: cfg.get<string>("variableDefColor", builtIn.varDef),
+      varAssign: cfg.get<string>("variableAssignColor", builtIn.varAssign),
+      varUse: cfg.get<string>("variableUseColor", builtIn.varUse),
+      func: builtIn.func,
+      pipe: builtIn.pipe,
+      comment: builtIn.comment,
+    };
 
     const mk = (bg: string) =>
       vscode.window.createTextEditorDecorationType({
@@ -398,20 +378,14 @@ export class NestingDecorator {
   }
 
   activate(): void {
-    // Re-read config in case it changed between construction and this call.
-    this.refreshLanguageCache();
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (this.isActive(e.document.languageId)) {
-          for (const ed of vscode.window.visibleTextEditors) {
-            if (ed.document === e.document) this.scheduleUpdate(ed);
-          }
+        for (const ed of vscode.window.visibleTextEditors) {
+          if (ed.document === e.document) this.scheduleUpdate(ed);
         }
       }),
       vscode.window.onDidChangeActiveTextEditor((ed) => {
-        if (!ed) return;
-        if (this.isActive(ed.document.languageId)) this.updateDecorations(ed);
-        else this.clearDecorations(ed);
+        if (ed) this.updateDecorations(ed);
       }),
       // onDidOpenTextDocument fires when a document is opened or its language changes.
       // VS Code updates ed.document before firing, so URI comparison is sufficient.
@@ -419,23 +393,20 @@ export class NestingDecorator {
         const uri = doc.uri.toString();
         for (const ed of vscode.window.visibleTextEditors) {
           if (ed.document.uri.toString() !== uri) continue;
-          if (this.isActive(doc.languageId)) this.updateDecorations(ed);
-          else this.clearDecorations(ed);
+          this.updateDecorations(ed);
         }
       }),
       // Debounce resize/zoom: onDidChangeVisibleTextEditors fires continuously during those.
       vscode.window.onDidChangeVisibleTextEditors((editors) => {
         for (const ed of editors) {
-          if (this.isActive(ed.document.languageId)) this.scheduleUpdate(ed);
+          this.scheduleUpdate(ed);
         }
       }),
       vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration(CFG)) {
-          this.refreshLanguageCache();
           this.rebuildDecorations();
           for (const ed of vscode.window.visibleTextEditors) {
-            if (this.isActive(ed.document.languageId))
-              this.updateDecorations(ed);
+            this.updateDecorations(ed);
           }
         }
       }),
@@ -443,12 +414,11 @@ export class NestingDecorator {
     // onStartupFinished guarantees activate() runs after VS Code is fully initialized;
     // onDidChangeVisibleTextEditors handles editors that become visible after activate().
     for (const ed of vscode.window.visibleTextEditors) {
-      if (this.isActive(ed.document.languageId)) this.updateDecorations(ed);
+      this.updateDecorations(ed);
     }
   }
 
   private scheduleUpdate(editor: vscode.TextEditor): void {
-    if (!this.isActive(editor.document.languageId)) return;
     const key = editor.document.uri.toString();
     const existing = this.timers.get(key);
     if (existing) clearTimeout(existing);
@@ -462,10 +432,12 @@ export class NestingDecorator {
   }
 
   private updateDecorations(editor: vscode.TextEditor): void {
-    if (!vscode.workspace.getConfiguration(CFG).get<boolean>("enabled", true)) {
+    const cfg = vscode.workspace.getConfiguration(CFG);
+    if (!cfg.get<boolean>("enabled", true)) {
       this.clearDecorations(editor);
       return;
     }
+    const variableHighlight = cfg.get<boolean>("variableHighlight", true);
 
     const source = editor.document.getText();
     // Skip tokenizing files that have no template delimiters (fast path for large non-template files).
@@ -504,9 +476,9 @@ export class NestingDecorator {
     }
 
     editor.setDecorations(this.commentDeco, comment);
-    editor.setDecorations(this.varDefDeco, varDef);
-    editor.setDecorations(this.varAssignDeco, varAssign);
-    editor.setDecorations(this.varUseDeco, varUse);
+    editor.setDecorations(this.varDefDeco, variableHighlight ? varDef : []);
+    editor.setDecorations(this.varAssignDeco, variableHighlight ? varAssign : []);
+    editor.setDecorations(this.varUseDeco, variableHighlight ? varUse : []);
     editor.setDecorations(this.funcDeco, func);
     editor.setDecorations(this.pipeDeco, pipe);
   }

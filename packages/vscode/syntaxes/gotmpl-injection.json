@@ -1,6 +1,6 @@
 {
   "scopeName": "gotmpl.injection",
-  "injectionSelector": "L:text.html -comment -string, L:text.xml -comment -string, L:text.markdown -comment -string, L:source.yaml -comment -string, L:source.json -comment -string, L:source.cmake -comment -string, L:source.sql -comment -string, L:source.python -comment -string, L:source.shell -comment -string, L:source.toml -comment -string, L:source.ruby -comment -string, L:source.go -comment -string, L:source.nginx -comment -string",
+  "injectionSelector": "L:source -comment -string, L:text -comment -string",
   "patterns": [
     {
       "include": "#gotmpl-action"

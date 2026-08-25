@@ -34,18 +34,17 @@ For the second case, add specific patterns to `files.associations` so VS Code pi
   "*.sql.tmpl":          "sql",
   "*.sh.tmpl":           "shellscript",
   "*.py.tmpl":           "python",
+  "*.java.tmpl":         "java",
   // fallback for any remaining .tmpl
   "*.tmpl":              "colorful-tmpl"
 }
 ```
 
-## Automatic injection languages
+## Automatic injection
 
-The extension injects `{{ }}` syntax scopes and applies rainbow backgrounds automatically when the file language is one of:
+The extension injects `{{ }}` syntax scopes and applies rainbow backgrounds automatically inside **any** host language. The injection grammar targets every `source.*` and `text.*` scope, so templates embedded in Go, Java, Python, C++, C#, Rust, Lua, HTML, and other files all light up — while never injecting inside comments or string literals.
 
-`yaml` · `json` · `html` · `xml` · `markdown` · `cmake` · `sql` · `python` · `shellscript` · `toml` · `ruby` · `go` · `nginx`
-
-For any other language, add it to `colorful-tmpl.rainbow.additionalLanguages`.
+Keep the host file in its base language (via `files.associations`, above) and nothing else is required.
 
 ## Settings
 
@@ -53,7 +52,10 @@ For any other language, add it to `colorful-tmpl.rainbow.additionalLanguages`.
 |---|---|---|
 | `colorful-tmpl.rainbow.enabled` | `true` | Enable/disable all rainbow backgrounds. |
 | `colorful-tmpl.rainbow.palette` | 6 rgba colors | Background colors per nesting level (rotates). |
-| `colorful-tmpl.rainbow.additionalLanguages` | `[]` | Extra language IDs to apply rainbow decorations to, beyond the built-in injection list. |
+| `colorful-tmpl.rainbow.variableHighlight` | `true` | Enable/disable the variable spotting highlights (`$x :=`, `$x =`, `$x`). |
+| `colorful-tmpl.rainbow.variableDefColor` | theme green | Background color for `$x :=` definitions. |
+| `colorful-tmpl.rainbow.variableAssignColor` | theme orange | Background color for `$x =` assignments. |
+| `colorful-tmpl.rainbow.variableUseColor` | theme blue | Background color for `$x` uses. |
 
 ## Packages
 

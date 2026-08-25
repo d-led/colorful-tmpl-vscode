@@ -50,25 +50,8 @@
       {
         "scopeName": "colorful-tmpl.injection",
         "path": "./syntaxes/gotmpl-injection.json",
-        "injectTo": [
-          "text.html",
-          "text.html.derivative",
-          "text.yaml",
-          "source.yaml",
-          "source.json",
-          "text.xml",
-          "text.markdown",
-          "source.cmake",
-          "source.sql",
-          "source.python",
-          "source.shell",
-          "source.toml",
-          "source.ruby",
-          "source.go",
-          "source.nginx"
-        ],
         "embeddedLanguages": {
-          "meta.embedded.block.colorful-tmpl": "colorful-tmpl"
+          "meta.embedded.block.gotmpl": "colorful-tmpl"
         }
       }
     ],
@@ -131,23 +114,19 @@
         "colorful-tmpl.rainbow.variableHighlight": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Highlight variable definitions and uses with distinct backgrounds."
+          "markdownDescription": "Highlight variable definitions, assignments, and uses with distinct backgrounds."
         },
         "colorful-tmpl.rainbow.variableDefColor": {
           "type": "string",
-          "default": "rgba(100, 255, 100, 0.25)",
-          "markdownDescription": "Background color for variable writes ($x := and $x =)."
+          "markdownDescription": "Background color for variable definitions (`$x :=`). Defaults to a theme-aware green."
+        },
+        "colorful-tmpl.rainbow.variableAssignColor": {
+          "type": "string",
+          "markdownDescription": "Background color for variable assignments (`$x =`). Defaults to a theme-aware orange."
         },
         "colorful-tmpl.rainbow.variableUseColor": {
           "type": "string",
-          "default": "rgba(100, 200, 255, 0.15)",
-          "markdownDescription": "Background color for variable uses ($x)."
-        },
-        "colorful-tmpl.rainbow.additionalLanguages": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": [],
-          "markdownDescription": "Extra VS Code language IDs that should receive rainbow nesting decorations (e.g. `\"cmake\"`, `\"sql\"`, `\"python\"`). Keep the file in its base language for proper syntax coloring — the Go template injection grammar adds `{{ }}` scopes on top."
+          "markdownDescription": "Background color for variable uses (`$x`). Defaults to a theme-aware blue."
         }
       }
     },
