@@ -2,7 +2,7 @@
   "name": "colorful-tmpl",
   "displayName": "Colorful tmpl",
   "description": "Colorful syntax highlighting for Go templates — rainbow nesting backgrounds, variable spotting",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "d-led",
   "license": "MPL-2.0",
   "icon": "icon.png",
@@ -54,7 +54,10 @@
       {
         "scopeName": "colorful-tmpl.injection",
         "path": "./syntaxes/gotmpl-injection.json",
-        "injectTo": ["source", "text"],
+        "injectTo": [
+          "source",
+          "text"
+        ],
         "embeddedLanguages": {
           "meta.embedded.block.gotmpl": "colorful-tmpl"
         }
@@ -149,7 +152,7 @@
     "test:vscode": "tsc -p tsconfig.tests.json && vscode-test"
   },
   "devDependencies": {
-    "@colorful-tmpl/highlight-core": "0.1.1",
+    "@colorful-tmpl/highlight-core": "0.1.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.95.0",
