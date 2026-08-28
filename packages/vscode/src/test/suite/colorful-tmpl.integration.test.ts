@@ -40,10 +40,14 @@ describe("Colorful tmpl extension", () => {
     assert.strictEqual(editor.document.languageId, "java");
   });
 
-  it("ships rainbow settings with sensible defaults", () => {
-    const cfg = vscode.workspace.getConfiguration("colorful-tmpl.rainbow");
+  it("ships palette settings with sensible defaults", () => {
+    const cfg = vscode.workspace.getConfiguration("colorful-tmpl.palette");
     assert.strictEqual(cfg.get("enabled"), true);
     assert.strictEqual(cfg.get("variableHighlight"), true);
+    assert.strictEqual(cfg.get("preset"), "default");
+    const custom = cfg.get<string[]>("custom");
+    assert.ok(Array.isArray(custom));
+    assert.strictEqual(custom.length, 6);
   });
 
   it("re-decorates a template after an edit without throwing", async () => {

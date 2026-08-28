@@ -27,6 +27,13 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "colorful-tmpl.switchPalette",
+        "title": "Switch Palette",
+        "category": "Colorful tmpl"
+      }
+    ],
     "languages": [
       {
         "id": "colorful-tmpl",
@@ -99,12 +106,32 @@
     "configuration": {
       "title": "Colorful tmpl",
       "properties": {
-        "colorful-tmpl.rainbow.enabled": {
+        "colorful-tmpl.palette.enabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable rainbow background highlighting for nested template actions."
+          "markdownDescription": "Enable background highlighting for nested template actions."
         },
-        "colorful-tmpl.rainbow.palette": {
+        "colorful-tmpl.palette.preset": {
+          "type": "string",
+          "enum": [
+            "default",
+            "highContrast",
+            "custom"
+          ],
+          "enumItemLabels": [
+            "Default",
+            "High Contrast",
+            "Custom"
+          ],
+          "markdownEnumDescriptions": [
+            "Theme-aware pastel palette (6 colors, rotates).",
+            "Theme-aware high contrast palette — stronger, more opaque backgrounds for low-vision or busy screens.",
+            "Use the colors from `#colorful-tmpl.palette.custom#`."
+          ],
+          "default": "default",
+          "markdownDescription": "Which palette to use for nesting backgrounds. `highContrast` also strengthens variable, function, pipe, and comment highlights. `custom` uses `#colorful-tmpl.palette.custom#`. Use the **Colorful tmpl: Switch Palette** command to change it without opening Settings."
+        },
+        "colorful-tmpl.palette.custom": {
           "type": "array",
           "items": {
             "type": "string"
@@ -117,22 +144,22 @@
             "rgba(255, 255, 150, 0.20)",
             "rgba(255, 182, 193, 0.20)"
           ],
-          "markdownDescription": "Background colors for nesting levels (rotates). Use rgba() or hex."
+          "markdownDescription": "Custom background colors for nesting levels (rotates). Used when `#colorful-tmpl.palette.preset#` is `custom`. Use rgba() or hex."
         },
-        "colorful-tmpl.rainbow.variableHighlight": {
+        "colorful-tmpl.palette.variableHighlight": {
           "type": "boolean",
           "default": true,
           "markdownDescription": "Highlight variable definitions, assignments, and uses with distinct backgrounds."
         },
-        "colorful-tmpl.rainbow.variableDefColor": {
+        "colorful-tmpl.palette.variableDefColor": {
           "type": "string",
           "markdownDescription": "Background color for variable definitions (`$x :=`). Defaults to a theme-aware green."
         },
-        "colorful-tmpl.rainbow.variableAssignColor": {
+        "colorful-tmpl.palette.variableAssignColor": {
           "type": "string",
           "markdownDescription": "Background color for variable assignments (`$x =`). Defaults to a theme-aware orange."
         },
-        "colorful-tmpl.rainbow.variableUseColor": {
+        "colorful-tmpl.palette.variableUseColor": {
           "type": "string",
           "markdownDescription": "Background color for variable uses (`$x`). Defaults to a theme-aware blue."
         }

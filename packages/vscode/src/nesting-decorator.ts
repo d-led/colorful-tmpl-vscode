@@ -2,27 +2,97 @@ import { tokenize, TokenType } from "@colorful-tmpl/highlight-core";
 import * as vscode from "vscode";
 
 const LANG = "colorful-tmpl";
-const CFG = "colorful-tmpl.rainbow";
+const CFG = "colorful-tmpl.palette";
 
 type Span = { start: number; end: number };
 
-const PALETTES = {
-  dark: [
-    "rgba(178,218,232,0.18)",
-    "rgba(160,235,178,0.18)",
-    "rgba(255,222,192,0.20)",
-    "rgba(236,190,238,0.18)",
-    "rgba(255,252,180,0.18)",
-    "rgba(255,198,208,0.18)",
-  ],
-  light: [
-    "rgba(173,216,230,0.30)",
-    "rgba(144,238,144,0.30)",
-    "rgba(255,218,185,0.35)",
-    "rgba(221,160,221,0.30)",
-    "rgba(255,255,150,0.30)",
-    "rgba(255,182,193,0.30)",
-  ],
+type ThemeKind = "dark" | "light";
+type PaletteName = "default" | "highContrast";
+
+// Palette nesting-level colors. Each entry is one full rotation of 6 levels.
+const PALETTES: Record<ThemeKind, Record<PaletteName, string[]>> = {
+  dark: {
+    default: [
+      "rgba(178,218,232,0.18)",
+      "rgba(160,235,178,0.18)",
+      "rgba(255,222,192,0.20)",
+      "rgba(236,190,238,0.18)",
+      "rgba(255,252,180,0.18)",
+      "rgba(255,198,208,0.18)",
+    ],
+    highContrast: [
+      "rgba(89,183,255,0.50)",
+      "rgba(120,255,176,0.50)",
+      "rgba(255,186,92,0.50)",
+      "rgba(255,142,255,0.50)",
+      "rgba(255,245,108,0.50)",
+      "rgba(255,123,143,0.50)",
+    ],
+  },
+  light: {
+    default: [
+      "rgba(173,216,230,0.30)",
+      "rgba(144,238,144,0.30)",
+      "rgba(255,218,185,0.35)",
+      "rgba(221,160,221,0.30)",
+      "rgba(255,255,150,0.30)",
+      "rgba(255,182,193,0.30)",
+    ],
+    highContrast: [
+      "rgba(0,102,204,0.40)",
+      "rgba(0,143,57,0.40)",
+      "rgba(204,102,0,0.40)",
+      "rgba(153,51,204,0.40)",
+      "rgba(204,170,0,0.40)",
+      "rgba(204,0,68,0.40)",
+    ],
+  },
+};
+
+type SingleUseColorKey =
+  "varDef" | "varAssign" | "varUse" | "func" | "pipe" | "comment";
+
+// Single-use semantic colors (variables, functions, pipes, comments).
+const SINGLE_USE_COLORS: Record<
+  ThemeKind,
+  Record<PaletteName, Record<SingleUseColorKey, string>>
+> = {
+  dark: {
+    default: {
+      varDef: "rgba(150,238,178,0.30)",
+      varAssign: "rgba(255,208,134,0.30)",
+      varUse: "rgba(156,196,255,0.30)",
+      func: "rgba(216,188,252,0.30)",
+      pipe: "rgba(146,228,236,0.30)",
+      comment: "rgba(182,184,196,0.16)",
+    },
+    highContrast: {
+      varDef: "rgba(120,255,176,0.55)",
+      varAssign: "rgba(255,186,92,0.55)",
+      varUse: "rgba(89,183,255,0.55)",
+      func: "rgba(224,172,255,0.55)",
+      pipe: "rgba(111,229,240,0.55)",
+      comment: "rgba(210,212,222,0.35)",
+    },
+  },
+  light: {
+    default: {
+      varDef: "rgba(46,160,67,0.22)",
+      varAssign: "rgba(230,126,34,0.28)",
+      varUse: "rgba(33,102,172,0.22)",
+      func: "rgba(124,77,255,0.20)",
+      pipe: "rgba(0,131,143,0.24)",
+      comment: "rgba(160,160,160,0.18)",
+    },
+    highContrast: {
+      varDef: "rgba(0,143,57,0.40)",
+      varAssign: "rgba(204,102,0,0.40)",
+      varUse: "rgba(0,86,179,0.40)",
+      func: "rgba(102,51,153,0.40)",
+      pipe: "rgba(0,115,125,0.40)",
+      comment: "rgba(130,130,130,0.30)",
+    },
+  },
 };
 
 function isLightTheme(): boolean {
@@ -281,15 +351,27 @@ function buildPaletteIndexMap(
   return byPaletteIndex;
 }
 
-function singleUseColors(light: boolean) {
-  return {
-    varDef: light ? "rgba(46,160,67,0.22)" : "rgba(150,238,178,0.30)",
-    varAssign: light ? "rgba(230,126,34,0.28)" : "rgba(255,208,134,0.30)",
-    varUse: light ? "rgba(33,102,172,0.22)" : "rgba(156,196,255,0.30)",
-    func: light ? "rgba(124,77,255,0.20)" : "rgba(216,188,252,0.30)",
-    pipe: light ? "rgba(0,131,143,0.24)" : "rgba(146,228,236,0.30)",
-    comment: light ? "rgba(160,160,160,0.18)" : "rgba(182,184,196,0.16)",
-  };
+function themeKind(): ThemeKind {
+  return isLightTheme() ? "light" : "dark";
+}
+
+// Resolves the configured palette name, collapsing "custom" to "default" for
+// settings that only offer default/highContrast variants.
+function resolvedPaletteName(cfg: vscode.WorkspaceConfiguration): PaletteName {
+  return cfg.get<string>("preset", "default") === "highContrast"
+    ? "highContrast"
+    : "default";
+}
+
+function resolveLevelColors(cfg: vscode.WorkspaceConfiguration): string[] {
+  if (cfg.get<string>("preset", "default") === "custom") {
+    return cfg.get<string[]>("custom", PALETTES[themeKind()].default);
+  }
+  return PALETTES[themeKind()][resolvedPaletteName(cfg)];
+}
+
+function resolveSingleUseColors(cfg: vscode.WorkspaceConfiguration) {
+  return SINGLE_USE_COLORS[themeKind()][resolvedPaletteName(cfg)];
 }
 
 function buildActionMask(
@@ -345,13 +427,9 @@ export class NestingDecorator {
   private rebuildDecorations(): void {
     this.disposeDecorations();
 
-    const light = isLightTheme();
     const cfg = vscode.workspace.getConfiguration(CFG);
-    const palette: string[] = cfg.get(
-      "palette",
-      light ? PALETTES.light : PALETTES.dark,
-    );
-    const builtIn = singleUseColors(light);
+    const palette = resolveLevelColors(cfg);
+    const builtIn = resolveSingleUseColors(cfg);
     const colors = {
       varDef: cfg.get<string>("variableDefColor", builtIn.varDef),
       varAssign: cfg.get<string>("variableAssignColor", builtIn.varAssign),
@@ -477,7 +555,10 @@ export class NestingDecorator {
 
     editor.setDecorations(this.commentDeco, comment);
     editor.setDecorations(this.varDefDeco, variableHighlight ? varDef : []);
-    editor.setDecorations(this.varAssignDeco, variableHighlight ? varAssign : []);
+    editor.setDecorations(
+      this.varAssignDeco,
+      variableHighlight ? varAssign : [],
+    );
     editor.setDecorations(this.varUseDeco, variableHighlight ? varUse : []);
     editor.setDecorations(this.funcDeco, func);
     editor.setDecorations(this.pipeDeco, pipe);

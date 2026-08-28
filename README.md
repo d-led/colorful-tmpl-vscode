@@ -48,16 +48,46 @@ The extension injects `{{ }}` syntax scopes and applies rainbow backgrounds auto
 
 Keep the host file in its base language (via `files.associations`, above) and nothing else is required.
 
+## Palettes in 30 seconds
+
+1. Open any template — a `.gotmpl`/`.gohtml` file, or a `.tmpl` file kept in its base language (see above).
+2. Command Palette (`⇧⌘P` on macOS, `Ctrl+Shift+P` elsewhere) → **Colorful tmpl: Switch Palette**.
+3. Choose one:
+   - **Default** — soft pastels (theme-aware light/dark).
+   - **High Contrast** — bolder, more opaque backgrounds.
+   - **Custom** — your own colors.
+
+Nested blocks re-decorate immediately.
+
+Prefer Settings? Search *Colorful tmpl* → **Palette: Preset** dropdown. Note that VS Code Settings can't render color swatches — values appear as `rgba()`/hex text there; the actual colors show in the editor on nested template blocks. For a custom palette, set the preset to `custom` and list the colors (they rotate through nesting levels):
+
+```jsonc
+"colorful-tmpl.palette.preset": "custom",
+"colorful-tmpl.palette.custom": [
+  "rgba(178, 218, 232, 0.18)", // level 1
+  "rgba(160, 235, 178, 0.18)", // level 2
+  "rgba(255, 222, 192, 0.20)", // level 3
+  "rgba(236, 190, 238, 0.18)", // level 4
+  "rgba(255, 252, 180, 0.18)", // level 5
+  "rgba(255, 198, 208, 0.18)"  // level 6 — then wraps back to level 1
+]
+```
+
+Any `rgba()` or hex works.
+
 ## Settings
 
 | Key | Default | Description |
 |---|---|---|
-| `colorful-tmpl.rainbow.enabled` | `true` | Enable/disable all rainbow backgrounds. |
-| `colorful-tmpl.rainbow.palette` | 6 rgba colors | Background colors per nesting level (rotates). |
-| `colorful-tmpl.rainbow.variableHighlight` | `true` | Enable/disable the variable spotting highlights (`$x :=`, `$x =`, `$x`). |
-| `colorful-tmpl.rainbow.variableDefColor` | theme green | Background color for `$x :=` definitions. |
-| `colorful-tmpl.rainbow.variableAssignColor` | theme orange | Background color for `$x =` assignments. |
-| `colorful-tmpl.rainbow.variableUseColor` | theme blue | Background color for `$x` uses. |
+| `colorful-tmpl.palette.enabled` | `true` | Enable/disable background highlighting for nested template actions. |
+| `colorful-tmpl.palette.preset` | `default` | Named palette: `default`, `highContrast`, or `custom` (rendered as a dropdown in Settings). |
+| `colorful-tmpl.palette.custom` | 6 rgba colors | Custom nesting-level colors, used when `preset` is `custom`. |
+| `colorful-tmpl.palette.variableHighlight` | `true` | Enable/disable the variable spotting highlights (`$x :=`, `$x =`, `$x`). |
+| `colorful-tmpl.palette.variableDefColor` | theme green | Background color for `$x :=` definitions. |
+| `colorful-tmpl.palette.variableAssignColor` | theme orange | Background color for `$x =` assignments. |
+| `colorful-tmpl.palette.variableUseColor` | theme blue | Background color for `$x` uses. |
+
+Switch palettes without opening Settings via the **Colorful tmpl: Switch Palette** command in the Command Palette. The `default` and `highContrast` palettes are theme-aware (light vs. dark); `highContrast` uses stronger, more opaque backgrounds and also boosts the variable/function/pipe/comment highlights.
 
 ## Packages
 
