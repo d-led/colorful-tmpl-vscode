@@ -66,11 +66,11 @@ Keep the host file in its base language (via `files.associations`, above) and no
 
 ## Installation
 
-The extension is not yet published to the VS Code Marketplace. Install directly from source:
+Install from the VS Code Marketplace (`ext install d-led.colorful-tmpl`), or from source:
 
 ```bash
-git clone https://github.com/d-led/colorful-trees-forest.git
-cd colorful-trees-forest
+git clone https://github.com/d-led/colorful-tmpl-vscode.git
+cd colorful-tmpl-vscode
 npm install
 scripts/install-here.sh
 ```

@@ -6,9 +6,13 @@
   "publisher": "d-led",
   "license": "MPL-2.0",
   "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#1e1e2e",
+    "theme": "dark"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/d-led/colorful-trees-forest.git",
+    "url": "https://github.com/d-led/colorful-tmpl-vscode.git",
     "directory": "packages/vscode"
   },
   "engines": {
