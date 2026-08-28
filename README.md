@@ -1,5 +1,7 @@
 # Colorful Go Template — Rainbow Highlighter
 
+[![VS Marketplace](https://vsmarketplacebadges.dev/version/d-led.colorful-tmpl.svg)](https://marketplace.visualstudio.com/items?itemName=d-led.colorful-tmpl)
+
 > Go template rainbow backgrounds, variable spotting, and `{{ }}` injection into any host language.
 
 ## What it does
