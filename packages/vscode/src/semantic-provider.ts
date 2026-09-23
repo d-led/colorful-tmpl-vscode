@@ -1,5 +1,7 @@
-import { tokenize, TokenType } from "@colorful-tmpl/highlight-core";
+import { tokenize } from "@colorful-tmpl/highlight-core";
 import * as vscode from "vscode";
+
+import { classifyToken } from "./semantic-tokens.js";
 
 export class ColorfulTmplSemanticTokensProvider
   implements vscode.DocumentSemanticTokensProvider
@@ -28,35 +30,15 @@ export class ColorfulTmplSemanticTokensProvider
 
     for (const tok of tokens) {
       if (token.isCancellationRequested) return null;
+      const kind = classifyToken(tok);
+      if (!kind) continue;
       const startPos = document.positionAt(tok.start);
       const endPos = document.positionAt(tok.end);
-
-      switch (tok.type) {
-        case TokenType.Keyword:
-          builder.push(new vscode.Range(startPos, endPos), "keyword");
-          break;
-        case TokenType.VariableDef:
-          builder.push(
-            new vscode.Range(startPos, endPos),
-            "colorfulTmplVariable",
-            ["colorfulTmplDefinition"],
-          );
-          break;
-        case TokenType.VariableAssign:
-          builder.push(
-            new vscode.Range(startPos, endPos),
-            "colorfulTmplVariable",
-            ["colorfulTmplAssignment"],
-          );
-          break;
-        case TokenType.VariableUse:
-          builder.push(
-            new vscode.Range(startPos, endPos),
-            "colorfulTmplVariable",
-            ["readonly"],
-          );
-          break;
-      }
+      builder.push(
+        new vscode.Range(startPos, endPos),
+        kind.type,
+        kind.modifiers,
+      );
     }
 
     return builder.build();

@@ -92,13 +92,13 @@
         "language": "colorful-tmpl",
         "scopes": {
           "colorfulTmplVariable:colorfulTmplDefinition": [
-            "variable.other.readwrite.colorful-tmpl"
+            "variable.other.readwrite.gotmpl"
           ],
           "colorfulTmplVariable:colorfulTmplAssignment": [
-            "variable.other.readwrite.colorful-tmpl"
+            "variable.other.readwrite.gotmpl"
           ],
           "colorfulTmplVariable": [
-            "variable.other.colorful-tmpl"
+            "variable.other.gotmpl"
           ]
         }
       }
