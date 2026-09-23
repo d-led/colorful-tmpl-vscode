@@ -81,12 +81,12 @@ const SINGLE_USE_COLORS: Record<
   },
   light: {
     default: {
-      varDef: "rgba(46,160,67,0.22)",
-      varAssign: "rgba(230,126,34,0.28)",
-      varUse: "rgba(33,102,172,0.22)",
-      func: "rgba(124,77,255,0.20)",
-      pipe: "rgba(0,131,143,0.24)",
-      comment: "rgba(160,160,160,0.18)",
+      varDef: "rgba(46,160,67,0.32)",
+      varAssign: "rgba(230,126,34,0.36)",
+      varUse: "rgba(33,102,172,0.32)",
+      func: "rgba(124,77,255,0.28)",
+      pipe: "rgba(0,131,143,0.30)",
+      comment: "rgba(160,160,160,0.22)",
     },
     highContrast: {
       varDef: "rgba(0,143,57,0.40)",

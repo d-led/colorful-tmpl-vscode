@@ -32,12 +32,12 @@ export const PALETTES = {
       "rgba(255, 255, 150, 0.30)", // yellow
       "rgba(255, 182, 193, 0.30)", // pink
     ],
-    varDef: "rgba(46, 160, 67, 0.22)", // green
-    varAssign: "rgba(230, 126, 34, 0.28)", // orange
-    varUse: "rgba(33, 102, 172, 0.22)", // blue
-    func: "rgba(124, 77, 255, 0.20)", // violet
-    pipe: "rgba(0, 131, 143, 0.24)", // cyan
-    comment: "rgba(160, 160, 160, 0.18)", // grey
+    varDef: "rgba(46, 160, 67, 0.32)", // green
+    varAssign: "rgba(230, 126, 34, 0.36)", // orange
+    varUse: "rgba(33, 102, 172, 0.32)", // blue
+    func: "rgba(124, 77, 255, 0.28)", // violet
+    pipe: "rgba(0, 131, 143, 0.30)", // cyan
+    comment: "rgba(160, 160, 160, 0.22)", // grey
   },
 };
 

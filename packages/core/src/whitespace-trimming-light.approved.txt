@@ -1,7 +1,7 @@
-<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{- range </span><span style="background:rgba(33, 102, 172, 0.22)">.items</span><span style="background:rgba(144, 238, 144, 0.30)"> -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
-  {{- </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.22)">.name</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
+<pre style="background:#ffffff;color:#1e293b;padding:12px;font:13px monospace;line-height:1.5;margin:0"><span style="background:rgba(144, 238, 144, 0.30)">{{- range </span><span style="background:rgba(33, 102, 172, 0.32)">.items</span><span style="background:rgba(144, 238, 144, 0.30)"> -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
+  {{- </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(33, 102, 172, 0.32)">.name</span></span><span style="background:rgba(144, 238, 144, 0.30)"> }}
 </span><span style="background:rgba(144, 238, 144, 0.30)">{{- end -}}</span>
-<span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(124, 77, 255, 0.20)">true</span><span style="background:rgba(144, 238, 144, 0.30)"> -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
+<span style="background:rgba(144, 238, 144, 0.30)">{{ if </span><span style="background:rgba(124, 77, 255, 0.28)">true</span><span style="background:rgba(144, 238, 144, 0.30)"> -}}</span><span style="background:rgba(144, 238, 144, 0.30)">
   yes
 </span><span style="background:rgba(144, 238, 144, 0.30)"><span style="background:rgba(144, 238, 144, 0.30)">{{- else }}</span></span><span style="background:rgba(144, 238, 144, 0.30)">
   no
