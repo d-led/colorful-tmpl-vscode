@@ -1,6 +1,8 @@
 {
   "files.associations": {
     "*.py.tmpl": "python",
-    "*.java.tmpl": "java"
+    "*.java.tmpl": "java",
+    "*.go": "go",
+    "*.java": "java"
   }
 }

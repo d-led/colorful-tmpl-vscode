@@ -1,7 +1,7 @@
 {
   "name": "colorful-trees-forest-monorepo",
   "private": true,
-  "description": "Go template rainbow syntax highlighter — monorepo",
+  "description": "Colorful Go template syntax highlighter — monorepo",
   "license": "MPL-2.0",
   "engines": {
     "node": ">=20"

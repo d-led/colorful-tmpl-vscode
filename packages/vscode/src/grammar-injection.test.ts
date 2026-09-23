@@ -14,25 +14,33 @@ import type {
 // `vscode-textmate` and `vscode-oniguruma` ship CommonJS builds; load them via
 // `require` so the grammar test also runs under plain Node and vitest interop.
 const require = createRequire(import.meta.url);
-const { INITIAL, Registry } = require(
-  "vscode-textmate",
-) as typeof import("vscode-textmate");
-const { createOnigScanner, createOnigString, loadWASM } = require(
-  "vscode-oniguruma",
-) as typeof import("vscode-oniguruma");
+const { INITIAL, Registry } =
+  require("vscode-textmate") as typeof import("vscode-textmate");
+const { createOnigScanner, createOnigString, loadWASM } =
+  require("vscode-oniguruma") as typeof import("vscode-oniguruma");
 
 const pkgRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const injectionGrammar = JSON.parse(
   readFileSync(join(pkgRoot, "syntaxes", "gotmpl-injection.json"), "utf8"),
 ) as IRawGrammar;
-// Vendored, unmodified fixture from Red Hat's vscode-java repo (EPL-2.0).
-// See fixtures/grammars/NOTICE.md for source, commit, and license.
+// Vendored, unmodified test fixtures. See fixtures/grammars/NOTICE.md for
+// source, commit, and license of each grammar.
 const javaGrammar = JSON.parse(
-  readFileSync(join(pkgRoot, "fixtures", "grammars", "java.tmLanguage.json"), "utf8"),
+  readFileSync(
+    join(pkgRoot, "fixtures", "grammars", "java.tmLanguage.json"),
+    "utf8",
+  ),
+) as IRawGrammar;
+const goGrammar = JSON.parse(
+  readFileSync(
+    join(pkgRoot, "fixtures", "grammars", "go.tmLanguage.json"),
+    "utf8",
+  ),
 ) as IRawGrammar;
 
 let java: IGrammar;
+let go: IGrammar;
 
 beforeAll(async () => {
   const wasmBin = readFileSync(
@@ -49,24 +57,31 @@ beforeAll(async () => {
     onigLib,
     loadGrammar: async (scopeName) => {
       if (scopeName === "source.java") return javaGrammar;
+      if (scopeName === "source.go") return goGrammar;
       if (scopeName === "gotmpl.injection") return injectionGrammar;
       return null;
     },
     getInjections: (scopeName) =>
-      scopeName === "source.java" ? ["gotmpl.injection"] : undefined,
+      scopeName === "source.java" || scopeName === "source.go"
+        ? ["gotmpl.injection"]
+        : undefined,
   });
 
-  const grammar = await registry.loadGrammar("source.java");
-  if (!grammar) throw new Error("failed to load source.java grammar");
-  java = grammar;
+  const load = async (scopeName: string): Promise<IGrammar> => {
+    const grammar = await registry.loadGrammar(scopeName);
+    if (!grammar) throw new Error(`failed to load ${scopeName} grammar`);
+    return grammar;
+  };
+  java = await load("source.java");
+  go = await load("source.go");
 });
 
 /** Tokenizes a document (one string per line) and returns every produced token. */
-function tokenize(lines: string[]): IToken[] {
+function tokenize(grammar: IGrammar, lines: string[]): IToken[] {
   const tokens: IToken[] = [];
   let state: StateStack | null = INITIAL;
   for (const line of lines) {
-    const result = java.tokenizeLine(line, state);
+    const result = grammar.tokenizeLine(line, state);
     state = result.ruleStack;
     tokens.push(...result.tokens);
   }
@@ -74,8 +89,8 @@ function tokenize(lines: string[]): IToken[] {
 }
 
 /** Every scope name produced by tokenizing the given document. */
-function allScopes(lines: string[]): string[] {
-  return tokenize(lines).flatMap((token) => token.scopes);
+function allScopes(grammar: IGrammar, lines: string[]): string[] {
+  return tokenize(grammar, lines).flatMap((token) => token.scopes);
 }
 
 const COMBINED_JAVA_TEMPLATE = [
@@ -88,9 +103,9 @@ const COMBINED_JAVA_TEMPLATE = [
   "}",
 ];
 
-describe("gotmpl injection into Java (combined syntax)", () => {
+describe("gotmpl injection into Java (template as container)", () => {
   it("injects {{ }} action scopes into Java code", () => {
-    const scopes = allScopes(COMBINED_JAVA_TEMPLATE);
+    const scopes = allScopes(java, COMBINED_JAVA_TEMPLATE);
 
     expect(scopes).toContain("meta.embedded.block.gotmpl");
     expect(scopes).toContain("keyword.control.gotmpl");
@@ -99,18 +114,72 @@ describe("gotmpl injection into Java (combined syntax)", () => {
   });
 
   it("keeps Java syntax highlighted around the injected actions", () => {
-    const scopes = allScopes(COMBINED_JAVA_TEMPLATE);
+    const scopes = allScopes(java, COMBINED_JAVA_TEMPLATE);
 
     expect(scopes).toContain("source.java");
     expect(scopes).toContain("string.quoted.double.java");
   });
 
-  it("does not inject inside Java comments or strings", () => {
-    const scopes = allScopes(['String s = "{{ if .X }}"; // {{ if .Y }}']);
+  it("does not inject inside Java comments", () => {
+    const scopes = allScopes(java, ["// {{ if .Y }}"]);
 
     expect(scopes).not.toContain("keyword.control.gotmpl");
     expect(scopes).not.toContain("meta.embedded.block.gotmpl");
-    expect(scopes).toContain("string.quoted.double.java");
     expect(scopes).toContain("comment.line.double-slash.java");
+  });
+});
+
+describe("gotmpl injection into Java strings (template in string)", () => {
+  it("injects {{ }} into a double-quoted string", () => {
+    const scopes = allScopes(java, ['String s = "Hello {{ .Name }}";']);
+
+    expect(scopes).toContain("string.quoted.double.java");
+    expect(scopes).toContain("meta.embedded.block.gotmpl");
+    expect(scopes).toContain("punctuation.definition.template.begin.gotmpl");
+  });
+
+  it("injects {{ }} across a verbatim multiline text block", () => {
+    const scopes = allScopes(java, [
+      'String s = """',
+      "    {{- if .X }}",
+      "    hello {{ .Name }}",
+      "    {{- end }}",
+      '    """;',
+    ]);
+
+    expect(scopes).toContain("string.quoted.triple.java");
+    expect(scopes).toContain("keyword.control.gotmpl");
+    expect(scopes).toContain("variable.language.gotmpl");
+  });
+});
+
+describe("gotmpl injection into Go (never at top level, always in strings)", () => {
+  it("does not inject into nested composite literals", () => {
+    const scopes = allScopes(go, ["x := [][]int{{1, 2}, {3, 4}}"]);
+
+    expect(scopes).toContain("source.go");
+    expect(scopes).not.toContain("meta.embedded.block.gotmpl");
+    expect(scopes).not.toContain("constant.numeric.gotmpl");
+  });
+
+  it("injects {{ }} into a double-quoted string", () => {
+    const scopes = allScopes(go, ['tmpl := "Hello {{ .Name }}"']);
+
+    expect(scopes).toContain("string.quoted.double.go");
+    expect(scopes).toContain("meta.embedded.block.gotmpl");
+    expect(scopes).toContain("variable.language.gotmpl");
+  });
+
+  it("injects {{ }} into a verbatim multiline raw string", () => {
+    const scopes = allScopes(go, [
+      "tmpl := `Hello",
+      "{{- if .X }}",
+      "{{ .Name }}",
+      "{{- end }}`",
+    ]);
+
+    expect(scopes).toContain("string.quoted.raw.go");
+    expect(scopes).toContain("keyword.control.gotmpl");
+    expect(scopes).toContain("variable.language.gotmpl");
   });
 });

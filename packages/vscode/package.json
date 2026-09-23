@@ -1,7 +1,7 @@
 {
   "name": "colorful-tmpl",
   "displayName": "Colorful tmpl",
-  "description": "Colorful syntax highlighting for Go templates — rainbow nesting backgrounds, variable spotting",
+  "description": "Colorful syntax highlighting for Go templates — background colors for nesting, variable spotting",
   "version": "0.1.2",
   "publisher": "d-led",
   "license": "MPL-2.0",

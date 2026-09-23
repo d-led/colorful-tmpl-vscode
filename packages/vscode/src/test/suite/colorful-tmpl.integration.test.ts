@@ -40,6 +40,26 @@ describe("Colorful tmpl extension", () => {
     assert.strictEqual(editor.document.languageId, "java");
   });
 
+  it("keeps .go files in go and re-decorates them without throwing", async () => {
+    const editor = await openFixtureFile("src/sample.go");
+    assert.strictEqual(editor.document.languageId, "go");
+    await editor.edit((edit) =>
+      edit.insert(new vscode.Position(0, 0), "// edit\n"),
+    );
+    await waitForDecorator();
+    assert.ok(editor.document.getText().startsWith("// edit"));
+  });
+
+  it("keeps .java files in java with verbatim template strings without throwing", async () => {
+    const editor = await openFixtureFile("src/sample.java");
+    assert.strictEqual(editor.document.languageId, "java");
+    await editor.edit((edit) =>
+      edit.insert(new vscode.Position(0, 0), "// edit\n"),
+    );
+    await waitForDecorator();
+    assert.ok(editor.document.getText().startsWith("// edit"));
+  });
+
   it("ships palette settings with sensible defaults", () => {
     const cfg = vscode.workspace.getConfiguration("colorful-tmpl.palette");
     assert.strictEqual(cfg.get("enabled"), true);

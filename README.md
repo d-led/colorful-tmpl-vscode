@@ -1,25 +1,25 @@
-# Colorful Go Template — Rainbow Highlighter
+# Colorful Go Template — Syntax Highlighter
 
 [![VS Marketplace](https://vsmarketplacebadges.dev/version/d-led.colorful-tmpl.svg)](https://marketplace.visualstudio.com/items?itemName=d-led.colorful-tmpl)
 
-> Go template rainbow backgrounds, variable spotting, and `{{ }}` injection into any host language.
+> Go template background colors, variable spotting, and `{{ }}` injection into any host language.
 
 ## What it does
 
 ![colorful go template syntax highlighting screenshot](./docs/img/screenshot.png)
 
-- **Rainbow backgrounds** — each nesting level (`if`/`range`/`with`/`define`) gets a distinct background color, rotating through 6 levels.
+- **Background colors** — each nesting level (`if`/`range`/`with`/`define`) gets a distinct background color, rotating through 6 levels.
 - **Variable spotting** — `$x :=` definitions glow green, `$x =` assignments glow orange, `$x` uses glow blue.
-- **TextMate grammar** — foreground scope coloring in diff/peek views.
-- **Semantic tokens** — variable definitions vs. uses are classified so themes can style them.
-- **Injection grammar** — `{{ }}` actions are highlighted and rainbow-decorated inside any host language without losing that language's own syntax coloring.
+- **Diff & peek views** — the same highlighting shows up there too.
+- **Theme-friendly** — your theme styles definitions, assignments, and uses differently.
+- **Works in any file** — `{{ }}` actions are highlighted inside any host language without losing that language's own syntax coloring.
 
 ## Which language mode to choose
 
-| File type | Language mode to set | Why |
-|---|---|---|
-| Pure Go template (`.gotmpl`, `.gohtml`, etc.) | **Colorful Go Template** | The file IS the template; no base syntax to preserve. |
-| Template wrapping CMake, SQL, YAML, … | **Keep the base language** (`cmake`, `sql`, `yaml`, …) | The injection grammar adds `{{ }}` scopes on top; the decorator runs automatically. |
+| File type                                     | Language mode to set                                   | Why                                                                                 |
+| --------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Pure Go template (`.gotmpl`, `.gohtml`, etc.) | **Colorful Go Template**                               | The file IS the template; no base syntax to preserve.                               |
+| Template wrapping CMake, SQL, YAML, …         | **Keep the base language** (`cmake`, `sql`, `yaml`, …) | The injection grammar adds `{{ }}` scopes on top; the decorator runs automatically. |
 
 For the second case, add specific patterns to `files.associations` so VS Code picks the right language. More specific globs win over less specific ones:
 
@@ -44,7 +44,12 @@ For the second case, add specific patterns to `files.associations` so VS Code pi
 
 ## Automatic injection
 
-The extension injects `{{ }}` syntax scopes and applies rainbow backgrounds automatically inside **any** host language. The injection grammar targets every `source.*` and `text.*` scope, so templates embedded in Go, Java, Python, C++, C#, Rust, Lua, HTML, and other files all light up — while never injecting inside comments or string literals.
+The extension injects `{{ }}` syntax scopes automatically inside **any** host language, in two situations:
+
+- **Template as container** — a `.tmpl` file kept in its base language (`.java.tmpl`, `.py.tmpl`, …): `{{ }}` actions sit at the top level between host-language lines.
+- **Template in a string** — a program that builds a template stores it in a string literal. Actions inside `"…"`, verbatim/multiline strings (`"""…"""` text blocks, backtick raw strings), and JS template literals all light up too.
+
+Comments are never injected. Go source files have one exception: Go's own syntax can contain `{{`/`}}` in nested composite literals (e.g. `[][]int{{1,2},{3,4}}`), which is indistinguishable from a template action, so those are excluded from the top-level injection — while Go *strings* (including raw backtick strings) still light up.
 
 Keep the host file in its base language (via `files.associations`, above) and nothing else is required.
 
@@ -59,7 +64,7 @@ Keep the host file in its base language (via `files.associations`, above) and no
 
 Nested blocks re-decorate immediately.
 
-Prefer Settings? Search *Colorful tmpl* → **Palette: Preset** dropdown. Note that VS Code Settings can't render color swatches — values appear as `rgba()`/hex text there; the actual colors show in the editor on nested template blocks. For a custom palette, set the preset to `custom` and list the colors (they rotate through nesting levels):
+Prefer Settings? Search _Colorful tmpl_ → **Palette: Preset** dropdown. Note that VS Code Settings can't render color swatches — values appear as `rgba()`/hex text there; the actual colors show in the editor on nested template blocks. For a custom palette, set the preset to `custom` and list the colors (they rotate through nesting levels):
 
 ```jsonc
 "colorful-tmpl.palette.preset": "custom",
@@ -77,24 +82,24 @@ Any `rgba()` or hex works.
 
 ## Settings
 
-| Key | Default | Description |
-|---|---|---|
-| `colorful-tmpl.palette.enabled` | `true` | Enable/disable background highlighting for nested template actions. |
-| `colorful-tmpl.palette.preset` | `default` | Named palette: `default`, `highContrast`, or `custom` (rendered as a dropdown in Settings). |
-| `colorful-tmpl.palette.custom` | 6 rgba colors | Custom nesting-level colors, used when `preset` is `custom`. |
-| `colorful-tmpl.palette.variableHighlight` | `true` | Enable/disable the variable spotting highlights (`$x :=`, `$x =`, `$x`). |
-| `colorful-tmpl.palette.variableDefColor` | theme green | Background color for `$x :=` definitions. |
-| `colorful-tmpl.palette.variableAssignColor` | theme orange | Background color for `$x =` assignments. |
-| `colorful-tmpl.palette.variableUseColor` | theme blue | Background color for `$x` uses. |
+| Key                                         | Default       | Description                                                                                 |
+| ------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- |
+| `colorful-tmpl.palette.enabled`             | `true`        | Enable/disable background highlighting for nested template actions.                         |
+| `colorful-tmpl.palette.preset`              | `default`     | Named palette: `default`, `highContrast`, or `custom` (rendered as a dropdown in Settings). |
+| `colorful-tmpl.palette.custom`              | 6 rgba colors | Custom nesting-level colors, used when `preset` is `custom`.                                |
+| `colorful-tmpl.palette.variableHighlight`   | `true`        | Enable/disable the variable spotting highlights (`$x :=`, `$x =`, `$x`).                    |
+| `colorful-tmpl.palette.variableDefColor`    | theme green   | Background color for `$x :=` definitions.                                                   |
+| `colorful-tmpl.palette.variableAssignColor` | theme orange  | Background color for `$x =` assignments.                                                    |
+| `colorful-tmpl.palette.variableUseColor`    | theme blue    | Background color for `$x` uses.                                                             |
 
 Switch palettes without opening Settings via the **Colorful tmpl: Switch Palette** command in the Command Palette. The `default` and `highContrast` palettes are theme-aware (light vs. dark); `highContrast` uses stronger, more opaque backgrounds and also boosts the variable/function/pipe/comment highlights.
 
 ## Packages
 
-| Package | Description |
-|---|---|
+| Package                         | Description                                             |
+| ------------------------------- | ------------------------------------------------------- |
 | `@colorful-tmpl/highlight-core` | Editor-agnostic Go template lexer with nesting tracking |
-| `colorful-tmpl` (VS Code) | Grammars + rainbow decorator extension |
+| `colorful-tmpl` (VS Code)       | Grammars + background decorator extension                |
 
 ## Installation
 

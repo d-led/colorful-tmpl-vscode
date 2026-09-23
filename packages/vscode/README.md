@@ -1,30 +1,21 @@
-# Colorful tmpl — rainbow highlighting for Go templates
+# Colorful tmpl — highlighting for Go templates
 
-Rainbow nesting backgrounds, variable spotting, and `{{ }}` injection into any
-host language.
+Colorful syntax highlighting for Go templates — in pure template files, or mixed into the language they generate.
 
 ![Colorful Go template syntax highlighting](https://raw.githubusercontent.com/d-led/colorful-tmpl-vscode/main/docs/img/screenshot.png)
 
 ## What it does
 
-- **Rainbow backgrounds** — each nesting level (`if` / `range` / `with` / `define`) gets a distinct background color, rotating through 6 levels.
+- **Background colors** — each nesting level (`if` / `range` / `with` / `define`) gets its own background color, rotating through 6 levels.
 - **Variable spotting** — `$x :=` definitions glow green, `$x =` assignments glow orange, `$x` uses glow blue.
-- **TextMate grammar** — foreground scope coloring in diff/peek views.
-- **Semantic tokens** — variable definitions vs. uses are classified so themes can style them.
-- **Injection grammar** — `{{ }}` actions are highlighted and rainbow-decorated inside any host language without losing that language's own syntax coloring.
-
-## How it works
-
-```mermaid
-flowchart LR
-  src["Go template source"] --> lexer["@colorful-tmpl/highlight-core lexer"]
-  lexer -->|"nesting levels"| deco["rainbow decorator (VS Code)"]
-  grammar["gotmpl.tmLanguage.json"] --> deco
-  sem["semantic token provider"] --> deco
-  deco --> editor["editor"]
-```
+- **Diff & peek views** — the same highlighting shows up there too.
+- **Theme-friendly** — your theme styles definitions, assignments, and uses differently.
+- **Works in any file** — `{{ }}` actions get highlighted inside YAML, SQL, or another language, without losing that language's own colors.
 
 ## Choosing a language mode
+
+Most templates need a one-time config change — tell VS Code which language mode
+to use for each template file:
 
 | File type | Language mode to set | Why |
 |---|---|---|
@@ -51,6 +42,10 @@ For mixed templates, add patterns to `files.associations` — more specific glob
   "*.tmpl": "colorful-tmpl"
 }
 ```
+
+### Host-language errors
+
+Mixed templates keep their base language, so that language's tooling (Java's language server, `pyright`, ESLint, …) will flag the `{{ }}` lines as errors — the delimiters are not valid in the host language. That's expected and harmless. To silence it, exclude `*.tmpl` from that tool's project, e.g. Java: `java.project.resourceFilters` in `.vscode/settings.json`.
 
 ## Palettes in 30 seconds
 

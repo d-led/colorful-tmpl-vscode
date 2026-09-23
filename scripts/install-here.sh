@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build, package, and install the Go Template Rainbow VS Code extension
+# Build, package, and install the Colorful Go Template VS Code extension
 # into the currently running editor (the one whose integrated terminal we're in).
 #
 # Usage:

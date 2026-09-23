@@ -1,10 +1,14 @@
-import { tokenize, TokenType } from "@colorful-tmpl/highlight-core";
+import { tokenize } from "@colorful-tmpl/highlight-core";
 import * as vscode from "vscode";
 
-const LANG = "colorful-tmpl";
-const CFG = "colorful-tmpl.palette";
+import type { Span } from "./go-strings.js";
+import {
+  computeDecorations,
+  computeGoDecorations,
+} from "./template-decorations.js";
+import { templateScope } from "./template-host.js";
 
-type Span = { start: number; end: number };
+const CFG = "colorful-tmpl.palette";
 
 type ThemeKind = "dark" | "light";
 type PaletteName = "default" | "highContrast";
@@ -103,254 +107,6 @@ function isLightTheme(): boolean {
   );
 }
 
-function subtractRanges(parents: Span[], children: Span[]): Span[] {
-  let result = [...parents];
-  for (const child of children) {
-    const next: Span[] = [];
-    for (const p of result) {
-      if (child.end <= p.start || child.start >= p.end) next.push(p);
-      else {
-        if (p.start < child.start)
-          next.push({ start: p.start, end: child.start });
-        if (child.end < p.end) next.push({ start: child.end, end: p.end });
-      }
-    }
-    result = next;
-  }
-  return result;
-}
-
-function groupTextRangesByLevel(
-  tokens: ReturnType<typeof tokenize>,
-  insideAction: (pos: number) => boolean,
-): Map<number, Span[]> {
-  const byLevel = new Map<number, Span[]>();
-  for (const t of tokens) {
-    if (t.type !== TokenType.Text) continue;
-    if (t.nestingLevel === 0 || insideAction(t.start)) continue;
-    const list = byLevel.get(t.nestingLevel) ?? [];
-    const prev = list.at(-1);
-    if (prev && t.start <= prev.end) {
-      if (t.end > prev.end) prev.end = t.end;
-    } else list.push({ start: t.start, end: t.end });
-    byLevel.set(t.nestingLevel, list);
-  }
-  return byLevel;
-}
-
-// True when no non-action text token falls between two positions, i.e. only a {{ }} block separates them.
-function onlyActionBetween(
-  tokens: ReturnType<typeof tokenize>,
-  insideAction: (pos: number) => boolean,
-  from: number,
-  to: number,
-): boolean {
-  return !tokens.some(
-    (t) =>
-      t.type === TokenType.Text &&
-      !insideAction(t.start) &&
-      t.start >= from &&
-      t.start < to,
-  );
-}
-
-function extendRangesAcrossActions(
-  ranges: Span[],
-  tokens: ReturnType<typeof tokenize>,
-  insideAction: (pos: number) => boolean,
-): Span[] {
-  const sorted = [...ranges].sort((a, b) => a.start - b.start);
-  const merged: Span[] = [];
-  for (const rr of sorted) {
-    const prev = merged.at(-1);
-    if (prev && onlyActionBetween(tokens, insideAction, prev.end, rr.start)) {
-      prev.end = rr.end;
-      continue;
-    }
-    merged.push({ ...rr });
-  }
-  return merged;
-}
-
-// Text-only nesting ranges per level, merged so adjacent same-level text spans (across a single
-// {{ }} action) become one contiguous range.
-function buildLevelTextRanges(
-  tokens: ReturnType<typeof tokenize>,
-  insideAction: (pos: number) => boolean,
-): Map<number, Span[]> {
-  const byLevel = groupTextRangesByLevel(tokens, insideAction);
-  for (const [level, ranges] of byLevel) {
-    byLevel.set(level, extendRangesAcrossActions(ranges, tokens, insideAction));
-  }
-  return byLevel;
-}
-
-// Deepest levels paint on top; shallower levels are clipped to the areas deeper levels don't cover.
-function computePaintedLevels(
-  byLevel: Map<number, Span[]>,
-): Map<number, Span[]> {
-  const sortedLevels = [...byLevel.keys()].sort((a, b) => b - a);
-  const painted = new Map<number, Span[]>();
-  for (const level of sortedLevels) {
-    let ranges = byLevel.get(level) ?? [];
-    for (const [cl, cr] of painted) {
-      if (cl <= level) continue;
-      ranges = subtractRanges(ranges, cr);
-    }
-    if (ranges.length > 0) painted.set(level, ranges);
-  }
-  return painted;
-}
-
-type SemanticRanges = {
-  varDef: vscode.Range[];
-  varAssign: vscode.Range[];
-  varUse: vscode.Range[];
-  func: vscode.Range[];
-  pipe: vscode.Range[];
-  comment: vscode.Range[];
-  ctrlByLevel: Map<number, vscode.Range[]>;
-};
-
-type ActionBlockInfo = {
-  range: vscode.Range;
-  ctrlLevel: number;
-  hasCtrl: boolean;
-  hasComment: boolean;
-};
-
-// Scans one {{ ... }} action's contents starting right after the opening delimiter token.
-function scanActionContents(
-  tokens: ReturnType<typeof tokenize>,
-  start: number,
-): { end: number; ctrlLevel: number; hasCtrl: boolean; hasComment: boolean } {
-  let j = start;
-  let ctrlLevel = 0;
-  let hasCtrl = false;
-  let hasComment = false;
-  while (j < tokens.length && tokens[j].type !== TokenType.DelimClose) {
-    const tt = tokens[j].type;
-    if (tt === TokenType.Keyword) {
-      if (!hasCtrl) ctrlLevel = tokens[j].nestingLevel;
-      hasCtrl = true;
-    } else if (tt === TokenType.Comment) {
-      hasComment = true;
-    }
-    j++;
-  }
-  return { end: j, ctrlLevel, hasCtrl, hasComment };
-}
-
-// Scans each {{ }} action once and reports whether it holds a control-flow keyword or a comment.
-function scanActionBlocks(
-  tokens: ReturnType<typeof tokenize>,
-  rng: (s: number, e: number) => vscode.Range,
-): ActionBlockInfo[] {
-  const blocks: ActionBlockInfo[] = [];
-  let j = 0;
-  while (j < tokens.length) {
-    if (tokens[j].type !== TokenType.DelimOpen) {
-      j++;
-      continue;
-    }
-    const bs = tokens[j].start;
-    const { end, ctrlLevel, hasCtrl, hasComment } = scanActionContents(
-      tokens,
-      j + 1,
-    );
-    j = end;
-    if (j < tokens.length) {
-      blocks.push({
-        range: rng(bs, tokens[j].end),
-        ctrlLevel,
-        hasCtrl,
-        hasComment,
-      });
-    }
-    j++;
-  }
-  return blocks;
-}
-
-// Whole-{{ }}-block pass: comments and control-flow level chips.
-function collectBlockRanges(
-  tokens: ReturnType<typeof tokenize>,
-  rng: (s: number, e: number) => vscode.Range,
-): Pick<SemanticRanges, "comment" | "ctrlByLevel"> {
-  const comment: vscode.Range[] = [];
-  const ctrlByLevel = new Map<number, vscode.Range[]>();
-  for (const block of scanActionBlocks(tokens, rng)) {
-    if (block.hasComment) comment.push(block.range);
-    else if (block.hasCtrl) {
-      const list = ctrlByLevel.get(block.ctrlLevel) ?? [];
-      list.push(block.range);
-      ctrlByLevel.set(block.ctrlLevel, list);
-    }
-  }
-  return { comment, ctrlByLevel };
-}
-
-// Token pass: variables, field access, function names, and pipes.
-function collectTokenRanges(
-  tokens: ReturnType<typeof tokenize>,
-  rng: (s: number, e: number) => vscode.Range,
-): Pick<SemanticRanges, "varDef" | "varAssign" | "varUse" | "func" | "pipe"> {
-  const varDef: vscode.Range[] = [];
-  const varAssign: vscode.Range[] = [];
-  const varUse: vscode.Range[] = [];
-  const func: vscode.Range[] = [];
-  const pipe: vscode.Range[] = [];
-  for (const t of tokens) {
-    switch (t.type) {
-      case TokenType.VariableDef:
-        varDef.push(rng(t.start, t.end));
-        break;
-      case TokenType.VariableAssign:
-        varAssign.push(rng(t.start, t.end));
-        break;
-      case TokenType.VariableUse:
-      case TokenType.Dot:
-      case TokenType.Field:
-        varUse.push(rng(t.start, t.end));
-        break;
-      case TokenType.Function:
-        func.push(rng(t.start, t.end));
-        break;
-      case TokenType.Pipe:
-        pipe.push(rng(t.start, t.end));
-        break;
-      default:
-        break;
-    }
-  }
-  return { varDef, varAssign, varUse, func, pipe };
-}
-
-// Merges nesting-level backgrounds and control-flow chips into per-palette-index range lists,
-// pre-seeded so every index gets cleared even when it has no ranges this pass.
-function buildPaletteIndexMap(
-  painted: Map<number, Span[]>,
-  ctrlByLevel: Map<number, vscode.Range[]>,
-  paletteSize: number,
-  rng: (s: number, e: number) => vscode.Range,
-): Map<number, vscode.Range[]> {
-  const byPaletteIndex = new Map<number, vscode.Range[]>();
-  for (let i = 0; i < paletteSize; i++) byPaletteIndex.set(i, []);
-  for (const [level, spans] of painted) {
-    const idx = level % paletteSize;
-    const list = byPaletteIndex.get(idx) ?? [];
-    list.push(...spans.map((s) => rng(s.start, s.end)));
-    byPaletteIndex.set(idx, list);
-  }
-  for (const [level, ranges] of ctrlByLevel) {
-    const idx = level % paletteSize;
-    const list = byPaletteIndex.get(idx) ?? [];
-    list.push(...ranges);
-    byPaletteIndex.set(idx, list);
-  }
-  return byPaletteIndex;
-}
-
 function themeKind(): ThemeKind {
   return isLightTheme() ? "light" : "dark";
 }
@@ -372,26 +128,6 @@ function resolveLevelColors(cfg: vscode.WorkspaceConfiguration): string[] {
 
 function resolveSingleUseColors(cfg: vscode.WorkspaceConfiguration) {
   return SINGLE_USE_COLORS[themeKind()][resolvedPaletteName(cfg)];
-}
-
-function buildActionMask(
-  tokens: ReturnType<typeof tokenize>,
-  len: number,
-): Uint8Array {
-  const mask = new Uint8Array(len);
-  let i = 0;
-  while (i < tokens.length) {
-    if (tokens[i].type !== TokenType.DelimOpen) {
-      i++;
-      continue;
-    }
-    const start = tokens[i].start;
-    i++;
-    while (i < tokens.length && tokens[i].type !== TokenType.DelimClose) i++;
-    if (i < tokens.length) mask.fill(1, start, tokens[i].end);
-    i++;
-  }
-  return mask;
 }
 
 export class NestingDecorator {
@@ -518,50 +254,44 @@ export class NestingDecorator {
     const variableHighlight = cfg.get<boolean>("variableHighlight", true);
 
     const source = editor.document.getText();
-    // Skip tokenizing files that have no template delimiters (fast path for large non-template files).
-    if (editor.document.languageId !== LANG && !source.includes("{{")) {
+    const scope = templateScope(editor.document.languageId, source);
+    if (scope === "none") {
       this.clearDecorations(editor);
       return;
     }
-    const tokens = tokenize(source);
+
     const paletteSize = this.levelDecorations.size;
-    const rng = (s: number, e: number) =>
+    const decorations =
+      scope === "strings-only"
+        ? computeGoDecorations(source, paletteSize)
+        : computeDecorations(tokenize(source), source.length, paletteSize);
+
+    const toRange = (span: Span) =>
       new vscode.Range(
-        editor.document.positionAt(s),
-        editor.document.positionAt(e),
+        editor.document.positionAt(span.start),
+        editor.document.positionAt(span.end),
       );
 
-    const actionMask = buildActionMask(tokens, source.length);
-    const insideAction = (pos: number) => actionMask[pos] === 1;
-
-    const byLevel = buildLevelTextRanges(tokens, insideAction);
-    const painted = computePaintedLevels(byLevel);
-    const { comment, ctrlByLevel } = collectBlockRanges(tokens, rng);
-    const { varDef, varAssign, varUse, func, pipe } = collectTokenRanges(
-      tokens,
-      rng,
-    );
-    const byPaletteIndex = buildPaletteIndexMap(
-      painted,
-      ctrlByLevel,
-      paletteSize,
-      rng,
-    );
-
-    for (const [idx, ranges] of byPaletteIndex) {
-      const d = this.levelDecorations.get(idx);
-      if (d) editor.setDecorations(d, ranges);
+    for (const [idx, spans] of decorations.byPaletteIndex) {
+      const decoration = this.levelDecorations.get(idx);
+      if (decoration) editor.setDecorations(decoration, spans.map(toRange));
     }
 
-    editor.setDecorations(this.commentDeco, comment);
-    editor.setDecorations(this.varDefDeco, variableHighlight ? varDef : []);
+    editor.setDecorations(this.commentDeco, decorations.comment.map(toRange));
+    editor.setDecorations(
+      this.varDefDeco,
+      variableHighlight ? decorations.varDef.map(toRange) : [],
+    );
     editor.setDecorations(
       this.varAssignDeco,
-      variableHighlight ? varAssign : [],
+      variableHighlight ? decorations.varAssign.map(toRange) : [],
     );
-    editor.setDecorations(this.varUseDeco, variableHighlight ? varUse : []);
-    editor.setDecorations(this.funcDeco, func);
-    editor.setDecorations(this.pipeDeco, pipe);
+    editor.setDecorations(
+      this.varUseDeco,
+      variableHighlight ? decorations.varUse.map(toRange) : [],
+    );
+    editor.setDecorations(this.funcDeco, decorations.func.map(toRange));
+    editor.setDecorations(this.pipeDeco, decorations.pipe.map(toRange));
   }
 
   private clearDecorations(editor: vscode.TextEditor): void {
