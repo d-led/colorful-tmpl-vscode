@@ -1,103 +1,18 @@
-import { tokenize } from "@colorful-tmpl/highlight-core";
+import { basename } from "node:path";
+
 import * as vscode from "vscode";
 
 import type { Span } from "./go-strings.js";
+import { decoratedDocumentLine, type PaintColors } from "./highlight-log.js";
+import { readHighlightSwitches, resolvePalette } from "./palette.js";
 import {
   computeDecorations,
-  computeGoDecorations,
+  countDecorations,
+  decorationsForDocument,
 } from "./template-decorations.js";
 import { templateScope } from "./template-host.js";
 
 const CFG = "colorful-tmpl.palette";
-
-type ThemeKind = "dark" | "light";
-type PaletteName = "default" | "highContrast";
-
-// Palette nesting-level colors. Each entry is one full rotation of 6 levels.
-const PALETTES: Record<ThemeKind, Record<PaletteName, string[]>> = {
-  dark: {
-    default: [
-      "rgba(178,218,232,0.18)",
-      "rgba(160,235,178,0.18)",
-      "rgba(255,222,192,0.20)",
-      "rgba(236,190,238,0.18)",
-      "rgba(255,252,180,0.18)",
-      "rgba(255,198,208,0.18)",
-    ],
-    highContrast: [
-      "rgba(89,183,255,0.50)",
-      "rgba(120,255,176,0.50)",
-      "rgba(255,186,92,0.50)",
-      "rgba(255,142,255,0.50)",
-      "rgba(255,245,108,0.50)",
-      "rgba(255,123,143,0.50)",
-    ],
-  },
-  light: {
-    default: [
-      "rgba(173,216,230,0.30)",
-      "rgba(144,238,144,0.30)",
-      "rgba(255,218,185,0.35)",
-      "rgba(221,160,221,0.30)",
-      "rgba(255,255,150,0.30)",
-      "rgba(255,182,193,0.30)",
-    ],
-    highContrast: [
-      "rgba(0,102,204,0.40)",
-      "rgba(0,143,57,0.40)",
-      "rgba(204,102,0,0.40)",
-      "rgba(153,51,204,0.40)",
-      "rgba(204,170,0,0.40)",
-      "rgba(204,0,68,0.40)",
-    ],
-  },
-};
-
-type SingleUseColorKey =
-  "varDef" | "varAssign" | "varUse" | "func" | "pipe" | "comment";
-
-// Single-use semantic colors (variables, functions, pipes, comments).
-const SINGLE_USE_COLORS: Record<
-  ThemeKind,
-  Record<PaletteName, Record<SingleUseColorKey, string>>
-> = {
-  dark: {
-    default: {
-      varDef: "rgba(150,238,178,0.30)",
-      varAssign: "rgba(255,208,134,0.30)",
-      varUse: "rgba(156,196,255,0.30)",
-      func: "rgba(216,188,252,0.30)",
-      pipe: "rgba(146,228,236,0.30)",
-      comment: "rgba(182,184,196,0.16)",
-    },
-    highContrast: {
-      varDef: "rgba(120,255,176,0.55)",
-      varAssign: "rgba(255,186,92,0.55)",
-      varUse: "rgba(89,183,255,0.55)",
-      func: "rgba(224,172,255,0.55)",
-      pipe: "rgba(111,229,240,0.55)",
-      comment: "rgba(210,212,222,0.35)",
-    },
-  },
-  light: {
-    default: {
-      varDef: "rgba(46,160,67,0.32)",
-      varAssign: "rgba(230,126,34,0.36)",
-      varUse: "rgba(33,102,172,0.32)",
-      func: "rgba(124,77,255,0.28)",
-      pipe: "rgba(0,131,143,0.30)",
-      comment: "rgba(160,160,160,0.22)",
-    },
-    highContrast: {
-      varDef: "rgba(0,143,57,0.40)",
-      varAssign: "rgba(204,102,0,0.40)",
-      varUse: "rgba(0,86,179,0.40)",
-      func: "rgba(102,51,153,0.40)",
-      pipe: "rgba(0,115,125,0.40)",
-      comment: "rgba(130,130,130,0.30)",
-    },
-  },
-};
 
 function isLightTheme(): boolean {
   const kind = vscode.window.activeColorTheme.kind;
@@ -107,27 +22,18 @@ function isLightTheme(): boolean {
   );
 }
 
-function themeKind(): ThemeKind {
-  return isLightTheme() ? "light" : "dark";
-}
-
-// Resolves the configured palette name, collapsing "custom" to "default" for
-// settings that only offer default/highContrast variants.
-function resolvedPaletteName(cfg: vscode.WorkspaceConfiguration): PaletteName {
-  return cfg.get<string>("preset", "default") === "highContrast"
-    ? "highContrast"
-    : "default";
-}
-
-function resolveLevelColors(cfg: vscode.WorkspaceConfiguration): string[] {
-  if (cfg.get<string>("preset", "default") === "custom") {
-    return cfg.get<string[]>("custom", PALETTES[themeKind()].default);
-  }
-  return PALETTES[themeKind()][resolvedPaletteName(cfg)];
-}
-
-function resolveSingleUseColors(cfg: vscode.WorkspaceConfiguration) {
-  return SINGLE_USE_COLORS[themeKind()][resolvedPaletteName(cfg)];
+/** The palette the current theme and settings resolve to. */
+export function configuredPalette(cfg: vscode.WorkspaceConfiguration) {
+  return resolvePalette({
+    isLightTheme: isLightTheme(),
+    preset: cfg.get<string>("preset", "default"),
+    customLevels: cfg.get<string[]>("custom"),
+    colorOverrides: {
+      varDef: cfg.get<string>("variableDefColor"),
+      varAssign: cfg.get<string>("variableAssignColor"),
+      varUse: cfg.get<string>("variableUseColor"),
+    },
+  });
 }
 
 export class NestingDecorator {
@@ -138,6 +44,9 @@ export class NestingDecorator {
   private readonly disposables: vscode.Disposable[] = [];
   // Per-editor debounce timers keyed by document URI; avoids one timer clobbering another.
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
+  // Documents already reported to the log, so the report is one line per file.
+  private readonly reported = new Set<string>();
+  private paintColors!: PaintColors;
   private varDefDeco!: vscode.TextEditorDecorationType;
   private varAssignDeco!: vscode.TextEditorDecorationType;
   private varUseDeco!: vscode.TextEditorDecorationType;
@@ -145,7 +54,7 @@ export class NestingDecorator {
   private pipeDeco!: vscode.TextEditorDecorationType;
   private commentDeco!: vscode.TextEditorDecorationType;
 
-  constructor() {
+  constructor(private readonly log?: (line: string) => void) {
     this.rebuildDecorations();
   }
 
@@ -163,17 +72,7 @@ export class NestingDecorator {
   private rebuildDecorations(): void {
     this.disposeDecorations();
 
-    const cfg = vscode.workspace.getConfiguration(CFG);
-    const palette = resolveLevelColors(cfg);
-    const builtIn = resolveSingleUseColors(cfg);
-    const colors = {
-      varDef: cfg.get<string>("variableDefColor", builtIn.varDef),
-      varAssign: cfg.get<string>("variableAssignColor", builtIn.varAssign),
-      varUse: cfg.get<string>("variableUseColor", builtIn.varUse),
-      func: builtIn.func,
-      pipe: builtIn.pipe,
-      comment: builtIn.comment,
-    };
+    const palette = configuredPalette(vscode.workspace.getConfiguration(CFG));
 
     const mk = (bg: string) =>
       vscode.window.createTextEditorDecorationType({
@@ -181,14 +80,20 @@ export class NestingDecorator {
         borderRadius: "2px",
         isWholeLine: false,
       });
-    for (let i = 0; i < palette.length; i++)
-      this.levelDecorations.set(i, mk(palette[i]));
-    this.varDefDeco = mk(colors.varDef);
-    this.varAssignDeco = mk(colors.varAssign);
-    this.varUseDeco = mk(colors.varUse);
-    this.funcDeco = mk(colors.func);
-    this.pipeDeco = mk(colors.pipe);
-    this.commentDeco = mk(colors.comment);
+    palette.levels.forEach((level, i) =>
+      this.levelDecorations.set(i, mk(level)),
+    );
+    this.varDefDeco = mk(palette.colors.varDef);
+    this.varAssignDeco = mk(palette.colors.varAssign);
+    this.varUseDeco = mk(palette.colors.varUse);
+    this.funcDeco = mk(palette.colors.func);
+    this.pipeDeco = mk(palette.colors.pipe);
+    this.commentDeco = mk(palette.colors.comment);
+    this.paintColors = {
+      definitions: palette.colors.varDef,
+      uses: palette.colors.varUse,
+      functions: palette.colors.func,
+    };
   }
 
   activate(): void {
@@ -247,11 +152,11 @@ export class NestingDecorator {
 
   private updateDecorations(editor: vscode.TextEditor): void {
     const cfg = vscode.workspace.getConfiguration(CFG);
-    if (!cfg.get<boolean>("enabled", true)) {
+    const { enabled, variableHighlight } = readHighlightSwitches(cfg);
+    if (!enabled) {
       this.clearDecorations(editor);
       return;
     }
-    const variableHighlight = cfg.get<boolean>("variableHighlight", true);
 
     const source = editor.document.getText();
     const scope = templateScope(editor.document.languageId, source);
@@ -261,10 +166,12 @@ export class NestingDecorator {
     }
 
     const paletteSize = this.levelDecorations.size;
-    const decorations =
-      scope === "strings-only"
-        ? computeGoDecorations(source, paletteSize)
-        : computeDecorations(tokenize(source), source.length, paletteSize);
+    const decorations = decorationsForDocument(
+      editor.document.languageId,
+      source,
+      paletteSize,
+    );
+    this.reportDecorated(editor, decorations, variableHighlight);
 
     const toRange = (span: Span) =>
       new vscode.Range(
@@ -292,6 +199,26 @@ export class NestingDecorator {
     );
     editor.setDecorations(this.funcDeco, decorations.func.map(toRange));
     editor.setDecorations(this.pipeDeco, decorations.pipe.map(toRange));
+  }
+
+  /** Reports what this document got, once per file, for the log channel. */
+  private reportDecorated(
+    editor: vscode.TextEditor,
+    decorations: ReturnType<typeof computeDecorations>,
+    variableHighlight: boolean,
+  ): void {
+    const uri = editor.document.uri.toString();
+    if (!this.log || this.reported.has(uri)) return;
+    this.reported.add(uri);
+    this.log(
+      decoratedDocumentLine({
+        fileName: basename(editor.document.uri.path),
+        languageId: editor.document.languageId,
+        variableHighlight,
+        colors: this.paintColors,
+        ...countDecorations(decorations),
+      }),
+    );
   }
 
   private clearDecorations(editor: vscode.TextEditor): void {

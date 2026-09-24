@@ -1,11 +1,16 @@
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { tokenize, TokenType } from "@colorful-tmpl/highlight-core";
 import { describe, expect, it } from "vitest";
-import { classifyToken } from "./semantic-tokens.js";
+import { classifyToken, VARIABLE_TOKEN_TYPE } from "./semantic-tokens.js";
+import { computeDecorations } from "./template-decorations.js";
 
-const pkgRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+/** The template behind the README screenshot, the canonical template example. */
+function readScreenshotTemplate(): string {
+  return readFileSync(
+    new URL("../../../screenshot.tmpl", import.meta.url),
+    "utf8",
+  );
+}
 
 function classify(source: string, type: TokenType) {
   const tok = tokenize(source).find((t) => t.type === type);
@@ -44,16 +49,24 @@ describe("classifyToken", () => {
   });
 });
 
-describe("semantic token scopes align with the grammar", () => {
-  it("uses the same .gotmpl suffix the grammar uses", () => {
-    const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8"));
-    const scopes: Record<string, string[]> =
-      pkg.contributes.semanticTokenScopes[0].scopes;
+describe("variable highlighting paths agree", () => {
+  it("spots the same spans as variables in the semantic and the decoration pass", () => {
+    const source = readScreenshotTemplate();
+    const tokens = tokenize(source);
 
-    const all = Object.values(scopes).flat();
-    expect(all.length).toBeGreaterThan(0);
-    for (const scope of all) {
-      expect(scope.endsWith(".gotmpl")).toBe(true);
-    }
+    const painted = computeDecorations(tokens, source.length, 6);
+    const decoratedSpans = [
+      ...painted.varAssign,
+      ...painted.varDef,
+      ...painted.varUse,
+    ].sort((a, b) => a.start - b.start);
+    const semanticSpans = tokens
+      .filter((t) => classifyToken(t)?.type === VARIABLE_TOKEN_TYPE)
+      .map((t) => ({ start: t.start, end: t.end }));
+
+    const text = (spans: { start: number; end: number }[]) =>
+      spans.map((s) => source.slice(s.start, s.end));
+
+    expect(text(semanticSpans)).toEqual(text(decoratedSpans));
   });
 });

@@ -112,7 +112,13 @@ npm install
 scripts/install-here.sh
 ```
 
-`install-here.sh` builds the core and extension, packages a `.vsix`, and installs it into whichever VS Code window ran the command. Reload the window (`Developer: Reload Window`) to activate.
+`install-here.sh` builds the core and extension, packages a `.vsix`, force-installs it into whichever VS Code window ran the command, and then checks that the installed bundle really is the one it just built. Reload the window (`Developer: Reload Window`) to activate — an update only takes effect after the reload.
+
+Installing by hand (`code --install-extension *.vsix`) is what this script exists to avoid: VS Code refuses a version that is not newer than the installed one unless it is forced, and the glob also hands it the older `.vsix` files that pile up in `packages/vscode`, so the install stops on an old file and the previous build keeps running. If highlighting looks unchanged, ask what is actually installed:
+
+```bash
+bash scripts/install-here.sh --check   # or: npm run vscode:check
+```
 
 To uninstall: `scripts/install-here.sh --uninstall`
 
@@ -120,7 +126,8 @@ To uninstall: `scripts/install-here.sh --uninstall`
 
 ```bash
 npm install                     # install workspace dependencies
-npm test                        # run unit tests (vitest)
+npm test                        # unit + approval tests (vitest; builds the core package first)
+npm run test:all                # all suites: unit/approval + VS Code integration tests
 npm run test:watch              # run unit tests in watch mode
 npm run test:vscode             # run VS Code integration tests (Extension Development Host)
 npm run typecheck               # type-check all packages (tsc -b)
@@ -132,6 +139,17 @@ scripts/analyze.ts.sh           # run refactoring metrics lint
 ```
 
 `npm run test:vscode` downloads a VS Code build by default. Point `VSCODE_TEST_PATH` at an installed copy to skip the download (e.g. `VSCODE_TEST_PATH="/Applications/Visual Studio Code.app"`), or set `VSCODE_TEST_VERSION` to a release like `stable`, `insiders`, or `1.95.0`.
+
+### Continuous integration
+
+Two GitHub Actions workflows run on every push to `main` and every pull request:
+
+| Workflow                  | What it runs                                                                                 |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| `ci.yml`                  | `format:check`, `typecheck` and `npm test` on Node 20.19 and 22                              |
+| `ci-vscode-extension.yml` | `scripts/test-vscode-extension.sh` under `xvfb-run` against VS Code `stable` and `1.95.0`    |
+
+`npm run test:all` reproduces both locally; set `COLORFUL_TMPL_SKIP_VSCODE=1` to skip the extension tests.
 
 ### Approval tests
 

@@ -32,6 +32,11 @@
         "command": "colorful-tmpl.switchPalette",
         "title": "Switch Palette",
         "category": "Colorful tmpl"
+      },
+      {
+        "command": "colorful-tmpl.diagnose",
+        "title": "Diagnose Highlighting",
+        "category": "Colorful tmpl"
       }
     ],
     "languages": [
@@ -91,10 +96,10 @@
       {
         "language": "colorful-tmpl",
         "scopes": {
-          "colorfulTmplVariable:colorfulTmplDefinition": [
+          "colorfulTmplVariable.colorfulTmplDefinition": [
             "variable.other.readwrite.gotmpl"
           ],
-          "colorfulTmplVariable:colorfulTmplAssignment": [
+          "colorfulTmplVariable.colorfulTmplAssignment": [
             "variable.other.readwrite.gotmpl"
           ],
           "colorfulTmplVariable": [
@@ -173,7 +178,7 @@
   },
   "scripts": {
     "build": "node esbuild.extension.mjs",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist *.tsbuildinfo",
     "package": "npm run build && npx vsce package --no-dependencies",
     "test": "vitest run",
     "test:vscode": "tsc -p tsconfig.tests.json && vscode-test"

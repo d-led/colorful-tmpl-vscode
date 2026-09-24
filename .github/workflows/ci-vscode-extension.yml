@@ -1,0 +1,60 @@
+# VS Code extension integration tests: @vscode/test-cli launches a real
+# Extension Development Host (Electron) against the dogfood fixtures in
+# packages/vscode/fixtures. A separate workflow from ci.yml so the display and
+# VS Code download overhead never slows the fast lane; triggers match ci.yml so
+# the extension always gets tested alongside the other checks.
+
+name: vscode-extension
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: vscode-extension-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # `stable` catches upstream breakage; the pinned release tracks the
+        # `engines.vscode` floor in packages/vscode/package.json — the oldest
+        # API surface the extension claims to support.
+        vscode_version: [stable, "1.95.0"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install xvfb (Electron needs a display)
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Cache VS Code test download
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: packages/vscode/.vscode-test
+          key: vscode-test-${{ runner.os }}-${{ matrix.vscode_version }}-${{
+            hashFiles('package-lock.json', 'packages/vscode/package.json') }}
+
+      # Builds core + the extension bundle, then runs the suite; the script wraps
+      # the host in xvfb-run on its own when CI=true on Linux.
+      - name: Run VS Code extension tests
+        run: bash scripts/test-vscode-extension.sh
+        env:
+          CI: true
+          VSCODE_TEST_VERSION: ${{ matrix.vscode_version }}

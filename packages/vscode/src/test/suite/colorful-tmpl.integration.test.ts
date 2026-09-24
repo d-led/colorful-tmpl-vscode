@@ -3,11 +3,35 @@ import * as vscode from "vscode";
 
 import {
   closeAllEditors,
+  EXTENSION_ID,
   openFixtureFile,
+  openRepositoryFile,
+  semanticTokensFor,
   waitForDecorator,
 } from "./colorful-tmpl-test-support.js";
 
-const EXTENSION_ID = "d-led.colorful-tmpl";
+/** Variables and fields the README screenshot template is expected to spot. */
+const SCREENSHOT_VARIABLES = [
+  ".Tag",
+  ".Services",
+  "$tag",
+  "$.Env",
+  "$i",
+  ".Services",
+  "$svc.Enabled",
+  "$svc.Name",
+  "$svc.Image",
+  "$tag",
+  "$svc.Config",
+  ".TLS",
+  ".Protocol",
+  ".Port",
+  "$svc.Name",
+  ".Protocol",
+  ".Port",
+  ".Port",
+  "$svc.Name",
+];
 
 describe("Colorful tmpl extension", () => {
   before(async () => {
@@ -77,5 +101,68 @@ describe("Colorful tmpl extension", () => {
     );
     await waitForDecorator();
     assert.ok(editor.document.getText().startsWith("{{ .Extra }}"));
+  });
+
+  it("opens the README screenshot template as a colorful-tmpl document", async () => {
+    const editor = await openRepositoryFile("screenshot.tmpl");
+
+    assert.strictEqual(editor.document.languageId, "colorful-tmpl");
+  });
+
+  it("spots every variable of the README screenshot template", async () => {
+    const editor = await openRepositoryFile("screenshot.tmpl");
+    const { legend, tokens } = await semanticTokensFor(editor.document);
+
+    assert.deepStrictEqual(
+      legend.tokenTypes,
+      ["keyword", "variable", "colorfulTmplVariable"],
+      "the legend VS Code registers must match package.json",
+    );
+
+    const variables = tokens.filter((t) => t.type === "colorfulTmplVariable");
+    assert.deepStrictEqual(
+      variables
+        .filter((t) => t.modifiers.includes("colorfulTmplDefinition"))
+        .map((t) => t.text),
+      ["$tag", "$svc"],
+      "expected exactly the two variable definitions",
+    );
+    assert.deepStrictEqual(
+      variables
+        .filter((t) => t.modifiers.includes("readonly"))
+        .map((t) => t.text),
+      SCREENSHOT_VARIABLES,
+      "expected every variable use and field access to be highlighted",
+    );
+    assert.deepStrictEqual(
+      [...new Set(variables.map((t) => t.modifiers.join(".")))].sort(),
+      ["colorfulTmplDefinition", "readonly"],
+      "expected only definitions and reads in this template",
+    );
+  });
+
+  // The band and variable backgrounds are decorations, which no VS Code API can
+  // read back. This asserts the extension's own answer, computed in the running
+  // editor from the settings VS Code actually resolves: a window that installed
+  // the build but never reloaded, or a switch turned off, fails here.
+  it("reports that it paints the README template's variables and bands", async () => {
+    const editor = await openRepositoryFile("screenshot.tmpl");
+    assert.strictEqual(editor.document.languageId, "colorful-tmpl");
+
+    const report = await vscode.commands.executeCommand<string>(
+      "colorful-tmpl.diagnose",
+    );
+
+    assert.ok(report, "the diagnose command must answer with a report");
+    assert.match(report, /Colorful tmpl v\d+\.\d+\.\d+/);
+    assert.match(report, /variableSpotting=on/);
+    assert.match(report, /backgrounds=on/);
+    assert.match(report, /screenshot\.tmpl \(colorful-tmpl\): 2 definitions/);
+    assert.match(report, /19 uses/);
+    assert.match(report, /6 functions/);
+    assert.ok(
+      Number(/ (\d+) bands/.exec(report)?.[1]) > 0,
+      `expected nesting bands to be painted, got: ${report}`,
+    );
   });
 });

@@ -1,7 +1,11 @@
 import { tokenize } from "@colorful-tmpl/highlight-core";
 import * as vscode from "vscode";
 
-import { classifyToken } from "./semantic-tokens.js";
+import {
+  classifyToken,
+  TOKEN_MODIFIERS,
+  TOKEN_TYPES,
+} from "./semantic-tokens.js";
 
 export class ColorfulTmplSemanticTokensProvider
   implements vscode.DocumentSemanticTokensProvider
@@ -10,8 +14,8 @@ export class ColorfulTmplSemanticTokensProvider
 
   constructor() {
     this.legend = new vscode.SemanticTokensLegend(
-      ["keyword", "variable", "colorfulTmplVariable"],
-      ["colorfulTmplDefinition", "colorfulTmplAssignment", "readonly"],
+      [...TOKEN_TYPES],
+      [...TOKEN_MODIFIERS],
     );
   }
 

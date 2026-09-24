@@ -2,6 +2,7 @@ import { describe, it } from "vitest";
 import { renderColoredHtml } from "./render-html.js";
 import type { Theme } from "./render-html.js";
 import { verify } from "approvals";
+import { readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -229,5 +230,16 @@ LIMIT {{ .limit }}`,
 </body>
 </html>`,
     );
+  });
+
+  it("the template shown in the README screenshot", () => {
+    // `screenshot.tmpl` at the repo root is what `docs/img/screenshot.png` shows;
+    // pinning it keeps the advertised look honest.
+    const template = readFileSync(
+      new URL("../../../screenshot.tmpl", import.meta.url),
+      "utf8",
+    );
+
+    verifyBoth("readme-screenshot", template);
   });
 });

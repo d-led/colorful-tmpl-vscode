@@ -4,6 +4,8 @@ import type { Span } from "./go-strings.js";
 import {
   computeDecorations,
   computeGoDecorations,
+  countDecorations,
+  decorationsForDocument,
 } from "./template-decorations.js";
 
 const PALETTE_SIZE = 6;
@@ -91,5 +93,69 @@ describe("computeGoDecorations (strings-only)", () => {
     expect(textSlices(source, decorations.byPaletteIndex.get(1) ?? [])).toEqual(
       ["A", "B"],
     );
+  });
+});
+
+describe("decorationsForDocument", () => {
+  it("decorates the whole file when the language is the template's own", () => {
+    const source = "{{ if .X }}{{ $x := 1 }}{{ $x }}{{ end }}";
+
+    const counts = countDecorations(
+      decorationsForDocument("colorful-tmpl", source, PALETTE_SIZE),
+    );
+
+    expect(counts.definitions).toBe(1);
+    expect(counts.uses).toBe(2); // .X and $x
+    expect(counts.bands).toBeGreaterThan(0);
+  });
+
+  it("only decorates string literals when the host language uses {{ }} too", () => {
+    const goSource = [
+      "package main",
+      "",
+      "var matrix = [][]int{{1, 2}, {3, 4}}",
+      'var tmpl = "{{ $x := .Name }}{{ $x }}"',
+    ].join("\n");
+
+    const decorations = decorationsForDocument("go", goSource, PALETTE_SIZE);
+
+    expect(slices(goSource, decorations.varDef)).toEqual(["$x"]);
+    expect(slices(goSource, decorations.varUse)).toEqual([".Name", "$x"]);
+    // Nothing is painted for the composite literal on the line above.
+    expect(countDecorations(decorations)).toEqual({
+      definitions: 1,
+      assignments: 0,
+      uses: 2,
+      functions: 0,
+      bands: 0,
+    });
+  });
+
+  it("counts nothing for a host file without template actions", () => {
+    const counts = countDecorations(
+      decorationsForDocument("python", "print('hello')", PALETTE_SIZE),
+    );
+
+    expect(counts).toEqual({
+      definitions: 0,
+      assignments: 0,
+      uses: 0,
+      functions: 0,
+      bands: 0,
+    });
+  });
+});
+
+describe("countDecorations", () => {
+  it("counts each class of range", () => {
+    const source = "{{ $x := .Name }}{{ $x := 1 }}{{ $x }}";
+
+    const counts = countDecorations(
+      computeDecorations(tokenize(source), source.length, PALETTE_SIZE),
+    );
+
+    expect(counts.definitions).toBe(2);
+    expect(counts.uses).toBe(2);
+    expect(counts.bands).toBe(0);
   });
 });

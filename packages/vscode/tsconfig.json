@@ -7,6 +7,10 @@
     "outDir": "dist",
     "rootDir": "src",
     "composite": true,
+    // `dist/extension.js` is the esbuild bundle that ships and that the install
+    // script verifies. Emitting declarations only keeps `tsc -b` (typecheck)
+    // from overwriting it with a plain compiled module.
+    "emitDeclarationOnly": true,
     "types": ["node", "vscode"]
   },
   "include": ["src/**/*.ts"],

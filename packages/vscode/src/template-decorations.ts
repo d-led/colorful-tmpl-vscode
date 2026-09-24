@@ -1,6 +1,7 @@
 import { tokenize, TokenType } from "@colorful-tmpl/highlight-core";
 
 import { goStringContents, type Span } from "./go-strings.js";
+import { templateScope } from "./template-host.js";
 
 export type { Span };
 
@@ -13,6 +14,15 @@ export type Decorations = {
   varUse: Span[];
   func: Span[];
   pipe: Span[];
+};
+
+/** How many ranges each decoration class holds; used for logs and diagnostics. */
+export type DecorationCounts = {
+  definitions: number;
+  assignments: number;
+  uses: number;
+  functions: number;
+  bands: number;
 };
 
 function subtractRanges(parents: Span[], children: Span[]): Span[] {
@@ -367,4 +377,33 @@ export function computeGoDecorations(
     mergeDecorations(merged, offsetDecorations(decorations, start));
   }
   return merged;
+}
+
+/** Totals per decoration class, for the log line and the diagnose command. */
+export function countDecorations(decorations: Decorations): DecorationCounts {
+  return {
+    definitions: decorations.varDef.length,
+    assignments: decorations.varAssign.length,
+    uses: decorations.varUse.length,
+    functions: decorations.func.length,
+    bands: [...decorations.byPaletteIndex.values()].reduce(
+      (total, spans) => total + spans.length,
+      0,
+    ),
+  };
+}
+
+/**
+ * Decorations for a document, using the pass its language calls for: the whole
+ * file for a template, or only the string literals of a host language that also
+ * uses `{{`/`}}` in its own syntax (Go composite literals).
+ */
+export function decorationsForDocument(
+  languageId: string,
+  source: string,
+  paletteSize: number,
+): Decorations {
+  return templateScope(languageId, source) === "strings-only"
+    ? computeGoDecorations(source, paletteSize)
+    : computeDecorations(tokenize(source), source.length, paletteSize);
 }
