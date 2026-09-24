@@ -78,15 +78,20 @@ Any `rgba()` or hex works.
 
 | Key | Default | Description |
 |---|---|---|
-| `colorful-tmpl.palette.enabled` | `true` | Enable/disable background highlighting for nested template actions. |
+| `colorful-tmpl.highlight.enabled` | `true` | Master switch: every background this extension paints — nesting bands **and** variable/function/pipe/comment highlights. |
+| `colorful-tmpl.highlight.variables` | `true` | Variable definitions, assignments and uses (`$x :=`, `$x =`, `$x`, `.Field`). Off keeps bands, functions and pipes. |
+| `colorful-tmpl.highlight.functions` | `true` | Function calls (`print`, `index`, `coll.Slice`, …). Off keeps bands, variables and pipes. |
 | `colorful-tmpl.palette.preset` | `default` | Named palette: `default`, `highContrast`, or `custom` (rendered as a dropdown in Settings). |
 | `colorful-tmpl.palette.custom` | 6 rgba colors | Custom nesting-level colors, used when `preset` is `custom`. |
-| `colorful-tmpl.palette.variableHighlight` | `true` | Enable/disable the variable spotting highlights. |
 | `colorful-tmpl.palette.variableDefColor` | theme green | Background color for `$x :=` definitions. |
 | `colorful-tmpl.palette.variableAssignColor` | theme orange | Background color for `$x =` assignments. |
 | `colorful-tmpl.palette.variableUseColor` | theme blue | Background color for `$x` uses. |
 
+Before 0.1.4 the switches were named `colorful-tmpl.palette.enabled`, `...variableHighlight` and `...functionHighlight`. Those keys still work (and are marked deprecated in Settings), but new settings belong under `colorful-tmpl.highlight.*`.
+
 Switch palettes without opening Settings via the **Colorful tmpl: Switch Palette** command in the Command Palette. The `default` and `highContrast` palettes are theme-aware (light vs. dark); `highContrast` uses stronger, more opaque backgrounds and also boosts the variable/function/pipe/comment highlights.
+
+If highlighting ever looks wrong, **Colorful tmpl: Diagnose Highlighting** prints the running version, the resolved switches and what it paints for the open file (also in the *Colorful tmpl* output channel).
 
 ## Installation
 

@@ -27,7 +27,7 @@ esac
 echo "=== Colorful tmpl VS Code Extension Publisher ===" >&2
 
 echo "1/3 Testing..." >&2
-npx vitest run -c vitest.config.ts
+npm test
 
 echo "2/3 Building core + extension..." >&2
 npm run build -w @colorful-tmpl/highlight-core
