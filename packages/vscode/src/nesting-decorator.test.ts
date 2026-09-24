@@ -149,12 +149,17 @@ describe("NestingDecorator", () => {
     expect(editor.textPaintedWith(lightPalette.levels[1])).toEqual([]);
   });
 
-  it("paints nothing when background highlighting is disabled", () => {
+  it("turns off bands, variables and functions with the master switch", () => {
     setSetting("colorful-tmpl.palette.enabled", false);
-    const editor = decorate("{{ $x := .Name }}{{ $x }}");
+    const editor = decorate(
+      "{{ if .X }}{{ $x := .Name }}{{ printf \"%s\" $x }}{{ end }}",
+    );
 
-    expect(paintedWith(editor, lightPalette).varDef).toEqual([]);
-    expect(paintedWith(editor, lightPalette).varUse).toEqual([]);
+    const painted = paintedWith(editor, lightPalette);
+    expect(painted.varDef).toEqual([]);
+    expect(painted.varUse).toEqual([]);
+    expect(painted.func).toEqual([]);
+    expect(painted.atLevel(1)).toEqual([]);
   });
 
   it("leaves variable spotting off when it is disabled, keeping nesting bands", () => {

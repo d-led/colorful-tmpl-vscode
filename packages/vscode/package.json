@@ -114,7 +114,17 @@
         "colorful-tmpl.palette.enabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable background highlighting for nested template actions."
+          "markdownDescription": "Master switch for every background this extension paints: the nesting bands **and** the variable, function, pipe and comment highlights. The template's own syntax colours (TextMate grammar and semantic tokens) stay. To drop a single class instead, use `#colorful-tmpl.palette.variableHighlight#` or `#colorful-tmpl.palette.functionHighlight#`."
+        },
+        "colorful-tmpl.palette.variableHighlight": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Highlight variable definitions, assignments and uses (`$x :=`, `$x =`, `$x`, `.Field`) with distinct backgrounds. Off leaves the nesting bands, functions and pipes in place."
+        },
+        "colorful-tmpl.palette.functionHighlight": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Highlight function calls (`print`, `index`, `coll.Slice`, …) with a distinct background. Off leaves the nesting bands, variables and pipes in place."
         },
         "colorful-tmpl.palette.preset": {
           "type": "string",
@@ -150,16 +160,6 @@
             "rgba(255, 182, 193, 0.20)"
           ],
           "markdownDescription": "Custom background colors for nesting levels (rotates). Used when `#colorful-tmpl.palette.preset#` is `custom`. Use rgba() or hex."
-        },
-        "colorful-tmpl.palette.variableHighlight": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Highlight variable definitions, assignments, and uses with distinct backgrounds."
-        },
-        "colorful-tmpl.palette.functionHighlight": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Highlight function calls (`print`, `index`, `coll.Slice`, …) with a distinct background."
         },
         "colorful-tmpl.palette.variableDefColor": {
           "type": "string",

@@ -84,11 +84,11 @@ Any `rgba()` or hex works.
 
 | Key                                         | Default       | Description                                                                                 |
 | ------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- |
-| `colorful-tmpl.palette.enabled`             | `true`        | Enable/disable background highlighting for nested template actions.                         |
+| `colorful-tmpl.palette.enabled`             | `true`        | Master switch: every background this extension paints — nesting bands **and** variable/function/pipe/comment highlights. |
+| `colorful-tmpl.palette.variableHighlight`   | `true`        | Variable definitions, assignments and uses (`$x :=`, `$x =`, `$x`, `.Field`). Off keeps bands, functions and pipes. |
+| `colorful-tmpl.palette.functionHighlight`   | `true`        | Function calls (`print`, `index`, `coll.Slice`, …). Off keeps bands, variables and pipes.    |
 | `colorful-tmpl.palette.preset`              | `default`     | Named palette: `default`, `highContrast`, or `custom` (rendered as a dropdown in Settings). |
 | `colorful-tmpl.palette.custom`              | 6 rgba colors | Custom nesting-level colors, used when `preset` is `custom`.                                |
-| `colorful-tmpl.palette.variableHighlight`   | `true`        | Enable/disable the variable spotting highlights (`$x :=`, `$x =`, `$x`).                    |
-| `colorful-tmpl.palette.functionHighlight`   | `true`        | Enable/disable the function-call highlights (`print`, `index`, `coll.Slice`, …).             |
 | `colorful-tmpl.palette.variableDefColor`    | theme green   | Background color for `$x :=` definitions.                                                   |
 | `colorful-tmpl.palette.variableAssignColor` | theme orange  | Background color for `$x =` assignments.                                                    |
 | `colorful-tmpl.palette.variableUseColor`    | theme blue    | Background color for `$x` uses.                                                             |
