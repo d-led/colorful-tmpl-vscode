@@ -134,12 +134,14 @@ export const DEFAULT_CUSTOM_LEVELS: string[] = [
 export type HighlightSwitches = {
   enabled: boolean;
   variableHighlight: boolean;
+  functionHighlight: boolean;
 };
 
 /** Shipped defaults for the switches, mirroring `default` in `package.json`. */
 export const HIGHLIGHT_SWITCH_DEFAULTS: HighlightSwitches = {
   enabled: true,
   variableHighlight: true,
+  functionHighlight: true,
 };
 
 /** The slice of `vscode.WorkspaceConfiguration` this policy reads. */
@@ -156,6 +158,10 @@ export function readHighlightSwitches(
     variableHighlight: cfg.get(
       "variableHighlight",
       HIGHLIGHT_SWITCH_DEFAULTS.variableHighlight,
+    ),
+    functionHighlight: cfg.get(
+      "functionHighlight",
+      HIGHLIGHT_SWITCH_DEFAULTS.functionHighlight,
     ),
   };
 }

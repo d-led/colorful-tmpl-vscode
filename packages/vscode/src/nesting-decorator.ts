@@ -4,7 +4,11 @@ import * as vscode from "vscode";
 
 import type { Span } from "./go-strings.js";
 import { decoratedDocumentLine, type PaintColors } from "./highlight-log.js";
-import { readHighlightSwitches, resolvePalette } from "./palette.js";
+import {
+  readHighlightSwitches,
+  resolvePalette,
+  type HighlightSwitches,
+} from "./palette.js";
 import {
   computeDecorations,
   countDecorations,
@@ -152,8 +156,8 @@ export class NestingDecorator {
 
   private updateDecorations(editor: vscode.TextEditor): void {
     const cfg = vscode.workspace.getConfiguration(CFG);
-    const { enabled, variableHighlight } = readHighlightSwitches(cfg);
-    if (!enabled) {
+    const switches = readHighlightSwitches(cfg);
+    if (!switches.enabled) {
       this.clearDecorations(editor);
       return;
     }
@@ -171,7 +175,7 @@ export class NestingDecorator {
       source,
       paletteSize,
     );
-    this.reportDecorated(editor, decorations, variableHighlight);
+    this.reportDecorated(editor, decorations, switches);
 
     const toRange = (span: Span) =>
       new vscode.Range(
@@ -187,17 +191,20 @@ export class NestingDecorator {
     editor.setDecorations(this.commentDeco, decorations.comment.map(toRange));
     editor.setDecorations(
       this.varDefDeco,
-      variableHighlight ? decorations.varDef.map(toRange) : [],
+      switches.variableHighlight ? decorations.varDef.map(toRange) : [],
     );
     editor.setDecorations(
       this.varAssignDeco,
-      variableHighlight ? decorations.varAssign.map(toRange) : [],
+      switches.variableHighlight ? decorations.varAssign.map(toRange) : [],
     );
     editor.setDecorations(
       this.varUseDeco,
-      variableHighlight ? decorations.varUse.map(toRange) : [],
+      switches.variableHighlight ? decorations.varUse.map(toRange) : [],
     );
-    editor.setDecorations(this.funcDeco, decorations.func.map(toRange));
+    editor.setDecorations(
+      this.funcDeco,
+      switches.functionHighlight ? decorations.func.map(toRange) : [],
+    );
     editor.setDecorations(this.pipeDeco, decorations.pipe.map(toRange));
   }
 
@@ -205,7 +212,7 @@ export class NestingDecorator {
   private reportDecorated(
     editor: vscode.TextEditor,
     decorations: ReturnType<typeof computeDecorations>,
-    variableHighlight: boolean,
+    switches: HighlightSwitches,
   ): void {
     const uri = editor.document.uri.toString();
     if (!this.log || this.reported.has(uri)) return;
@@ -214,7 +221,8 @@ export class NestingDecorator {
       decoratedDocumentLine({
         fileName: basename(editor.document.uri.path),
         languageId: editor.document.languageId,
-        variableHighlight,
+        variableHighlight: switches.variableHighlight,
+        functionHighlight: switches.functionHighlight,
         colors: this.paintColors,
         ...countDecorations(decorations),
       }),

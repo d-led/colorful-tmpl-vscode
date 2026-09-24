@@ -156,6 +156,11 @@
           "default": true,
           "markdownDescription": "Highlight variable definitions, assignments, and uses with distinct backgrounds."
         },
+        "colorful-tmpl.palette.functionHighlight": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Highlight function calls (`print`, `index`, `coll.Slice`, …) with a distinct background."
+        },
         "colorful-tmpl.palette.variableDefColor": {
           "type": "string",
           "markdownDescription": "Background color for variable definitions (`$x :=`). Defaults to a theme-aware green."

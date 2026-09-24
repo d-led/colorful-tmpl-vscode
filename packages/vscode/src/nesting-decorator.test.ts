@@ -167,6 +167,16 @@ describe("NestingDecorator", () => {
     expect(painted.atLevel(1)).toContain("{{ if .X }}");
   });
 
+  it("leaves function highlighting off when it is disabled, keeping the rest", () => {
+    setSetting("colorful-tmpl.palette.functionHighlight", false);
+    const editor = decorate('{{ if .X }}{{ printf "%s" .Name }}{{ end }}');
+
+    const painted = paintedWith(editor, lightPalette);
+    expect(painted.func).toEqual([]);
+    expect(painted.varUse).toContain(".Name");
+    expect(painted.atLevel(1)).toContain("{{ if .X }}");
+  });
+
   it("ignores documents without template actions", () => {
     const editor = decorate("plain python\nprint(1)", "python");
 

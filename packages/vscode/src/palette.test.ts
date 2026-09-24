@@ -92,6 +92,7 @@ describe("readHighlightSwitches", () => {
     expect(readHighlightSwitches(settings({}))).toEqual({
       enabled: true,
       variableHighlight: true,
+      functionHighlight: true,
     });
   });
 
@@ -100,6 +101,18 @@ describe("readHighlightSwitches", () => {
       readHighlightSwitches(
         settings({ enabled: false, variableHighlight: false }),
       ),
-    ).toEqual({ enabled: false, variableHighlight: false });
+    ).toEqual({
+      enabled: false,
+      variableHighlight: false,
+      functionHighlight: true,
+    });
+
+    expect(
+      readHighlightSwitches(settings({ functionHighlight: false })),
+    ).toEqual({
+      enabled: true,
+      variableHighlight: true,
+      functionHighlight: false,
+    });
   });
 });

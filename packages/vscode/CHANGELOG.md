@@ -3,6 +3,7 @@
 ## 0.1.4
 
 - Fixing variable and function highlighting.
+- Settings to switch variable and function highlighting off.
 
 ## 0.1.3
 

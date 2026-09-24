@@ -88,6 +88,7 @@ Any `rgba()` or hex works.
 | `colorful-tmpl.palette.preset`              | `default`     | Named palette: `default`, `highContrast`, or `custom` (rendered as a dropdown in Settings). |
 | `colorful-tmpl.palette.custom`              | 6 rgba colors | Custom nesting-level colors, used when `preset` is `custom`.                                |
 | `colorful-tmpl.palette.variableHighlight`   | `true`        | Enable/disable the variable spotting highlights (`$x :=`, `$x =`, `$x`).                    |
+| `colorful-tmpl.palette.functionHighlight`   | `true`        | Enable/disable the function-call highlights (`print`, `index`, `coll.Slice`, …).             |
 | `colorful-tmpl.palette.variableDefColor`    | theme green   | Background color for `$x :=` definitions.                                                   |
 | `colorful-tmpl.palette.variableAssignColor` | theme orange  | Background color for `$x =` assignments.                                                    |
 | `colorful-tmpl.palette.variableUseColor`    | theme blue    | Background color for `$x` uses.                                                             |

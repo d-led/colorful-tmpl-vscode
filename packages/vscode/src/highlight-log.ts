@@ -11,8 +11,9 @@ export type ActivationState = HighlightSwitches & {
 export type DecoratedDocument = DecorationCounts & {
   fileName: string;
   languageId: string;
-  /** The switch that decides whether the variable ranges are handed over. */
+  /** The switches that decide whether the variable and function ranges are handed over. */
   variableHighlight: boolean;
+  functionHighlight: boolean;
   /** The colours handed to the editor, so an unpaintable one is visible. */
   colors: PaintColors;
 };
@@ -52,7 +53,8 @@ export function activationLogLine(state: ActivationState): string {
     `[colorful-tmpl] v${state.version} activated — ` +
     `palette=${state.preset}, ` +
     `backgrounds=${onOff(state.enabled)}, ` +
-    `variableSpotting=${onOff(state.variableHighlight)}`
+    `variableSpotting=${onOff(state.variableHighlight)}, ` +
+    `functionSpotting=${onOff(state.functionHighlight)}`
   );
 }
 
@@ -64,7 +66,8 @@ export function activationLogLine(state: ActivationState): string {
 export function decoratedDocumentLine(document: DecoratedDocument): string {
   return (
     `[colorful-tmpl] ${document.fileName} (${document.languageId}): ` +
-    `${counts(document)} | variableSpotting=${onOff(document.variableHighlight)} | ` +
+    `${counts(document)} | variableSpotting=${onOff(document.variableHighlight)} ` +
+    `functionSpotting=${onOff(document.functionHighlight)} | ` +
     colors(document.colors)
   );
 }
@@ -76,7 +79,8 @@ export function highlightReport(
   return [
     `Colorful tmpl v${state.version}`,
     `palette=${state.preset} · backgrounds=${onOff(state.enabled)} · ` +
-      `variableSpotting=${onOff(state.variableHighlight)}`,
+      `variableSpotting=${onOff(state.variableHighlight)} · ` +
+      `functionSpotting=${onOff(state.functionHighlight)}`,
     `${state.fileName} (${state.languageId}): ${counts(state)}`,
     `colours: ${colors(state.colors)}`,
   ].join("\n");

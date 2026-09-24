@@ -19,11 +19,12 @@ describe("activationLogLine", () => {
       preset: "custom",
       enabled: true,
       variableHighlight: false,
+      functionHighlight: true,
     });
 
     expect(line).toBe(
       "[colorful-tmpl] v0.1.3 activated — palette=custom, " +
-        "backgrounds=on, variableSpotting=off",
+        "backgrounds=on, variableSpotting=off, functionSpotting=on",
     );
   });
 
@@ -33,6 +34,7 @@ describe("activationLogLine", () => {
       preset: "default",
       enabled: true,
       variableHighlight: true,
+      functionHighlight: true,
     });
 
     expect(line).not.toContain("\n");
@@ -45,6 +47,7 @@ describe("decoratedDocumentLine", () => {
     fileName: "screenshot.tmpl",
     languageId: "colorful-tmpl",
     variableHighlight: true,
+    functionHighlight: true,
     colors: {
       definitions: "rgba(46,160,67,0.32)",
       uses: "rgba(33,102,172,0.32)",
@@ -92,6 +95,7 @@ describe("highlightReport", () => {
       preset: "default",
       enabled: true,
       variableHighlight: true,
+      functionHighlight: true,
       fileName: "screenshot.tmpl",
       languageId: "colorful-tmpl",
       colors: {
@@ -108,7 +112,8 @@ describe("highlightReport", () => {
 
     expect(report.split("\n")).toEqual([
       "Colorful tmpl v0.1.3",
-      "palette=default · backgrounds=on · variableSpotting=on",
+      "palette=default · backgrounds=on · variableSpotting=on · " +
+        "functionSpotting=on",
       "screenshot.tmpl (colorful-tmpl): 2 definitions, 0 assignments, " +
         "19 uses, 6 functions, 18 bands",
       "colours: def rgba(46,160,67,0.32) use rgba(33,102,172,0.32) " +

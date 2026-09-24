@@ -88,6 +88,7 @@ describe("Colorful tmpl extension", () => {
     const cfg = vscode.workspace.getConfiguration("colorful-tmpl.palette");
     assert.strictEqual(cfg.get("enabled"), true);
     assert.strictEqual(cfg.get("variableHighlight"), true);
+    assert.strictEqual(cfg.get("functionHighlight"), true);
     assert.strictEqual(cfg.get("preset"), "default");
     const custom = cfg.get<string[]>("custom");
     assert.ok(Array.isArray(custom));
@@ -156,6 +157,7 @@ describe("Colorful tmpl extension", () => {
     assert.ok(report, "the diagnose command must answer with a report");
     assert.match(report, /Colorful tmpl v\d+\.\d+\.\d+/);
     assert.match(report, /variableSpotting=on/);
+    assert.match(report, /functionSpotting=on/);
     assert.match(report, /backgrounds=on/);
     assert.match(report, /screenshot\.tmpl \(colorful-tmpl\): 2 definitions/);
     assert.match(report, /19 uses/);
