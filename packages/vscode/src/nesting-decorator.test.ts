@@ -150,9 +150,9 @@ describe("NestingDecorator", () => {
   });
 
   it("turns off bands, variables and functions with the master switch", () => {
-    setSetting("colorful-tmpl.palette.enabled", false);
+    setSetting("colorful-tmpl.highlight.enabled", false);
     const editor = decorate(
-      "{{ if .X }}{{ $x := .Name }}{{ printf \"%s\" $x }}{{ end }}",
+      '{{ if .X }}{{ $x := .Name }}{{ printf "%s" $x }}{{ end }}',
     );
 
     const painted = paintedWith(editor, lightPalette);
@@ -163,7 +163,7 @@ describe("NestingDecorator", () => {
   });
 
   it("leaves variable spotting off when it is disabled, keeping nesting bands", () => {
-    setSetting("colorful-tmpl.palette.variableHighlight", false);
+    setSetting("colorful-tmpl.highlight.variables", false);
     const editor = decorate("{{ if .X }}{{ $x := .Name }}{{ end }}");
 
     const painted = paintedWith(editor, lightPalette);
@@ -173,13 +173,20 @@ describe("NestingDecorator", () => {
   });
 
   it("leaves function highlighting off when it is disabled, keeping the rest", () => {
-    setSetting("colorful-tmpl.palette.functionHighlight", false);
+    setSetting("colorful-tmpl.highlight.functions", false);
     const editor = decorate('{{ if .X }}{{ printf "%s" .Name }}{{ end }}');
 
     const painted = paintedWith(editor, lightPalette);
     expect(painted.func).toEqual([]);
     expect(painted.varUse).toContain(".Name");
     expect(painted.atLevel(1)).toContain("{{ if .X }}");
+  });
+
+  it("honours the pre-0.1.4 palette switch key", () => {
+    setSetting("colorful-tmpl.palette.variableHighlight", false);
+    const editor = decorate("{{ $x := .Name }}{{ $x }}");
+
+    expect(paintedWith(editor, lightPalette).varDef).toEqual([]);
   });
 
   it("ignores documents without template actions", () => {

@@ -5,6 +5,8 @@ import * as vscode from "vscode";
 import type { Span } from "./go-strings.js";
 import { decoratedDocumentLine, type PaintColors } from "./highlight-log.js";
 import {
+  HIGHLIGHT_SECTION,
+  PALETTE_SECTION,
   readHighlightSwitches,
   resolvePalette,
   type HighlightSwitches,
@@ -15,8 +17,6 @@ import {
   decorationsForDocument,
 } from "./template-decorations.js";
 import { templateScope } from "./template-host.js";
-
-const CFG = "colorful-tmpl.palette";
 
 function isLightTheme(): boolean {
   const kind = vscode.window.activeColorTheme.kind;
@@ -76,7 +76,9 @@ export class NestingDecorator {
   private rebuildDecorations(): void {
     this.disposeDecorations();
 
-    const palette = configuredPalette(vscode.workspace.getConfiguration(CFG));
+    const palette = configuredPalette(
+      vscode.workspace.getConfiguration(PALETTE_SECTION),
+    );
 
     const mk = (bg: string) =>
       vscode.window.createTextEditorDecorationType({
@@ -126,7 +128,10 @@ export class NestingDecorator {
         }
       }),
       vscode.workspace.onDidChangeConfiguration((e) => {
-        if (e.affectsConfiguration(CFG)) {
+        if (
+          e.affectsConfiguration(HIGHLIGHT_SECTION) ||
+          e.affectsConfiguration(PALETTE_SECTION)
+        ) {
           this.rebuildDecorations();
           for (const ed of vscode.window.visibleTextEditors) {
             this.updateDecorations(ed);
@@ -155,8 +160,10 @@ export class NestingDecorator {
   }
 
   private updateDecorations(editor: vscode.TextEditor): void {
-    const cfg = vscode.workspace.getConfiguration(CFG);
-    const switches = readHighlightSwitches(cfg);
+    const switches = readHighlightSwitches(
+      vscode.workspace.getConfiguration(HIGHLIGHT_SECTION),
+      vscode.workspace.getConfiguration(PALETTE_SECTION),
+    );
     if (!switches.enabled) {
       this.clearDecorations(editor);
       return;

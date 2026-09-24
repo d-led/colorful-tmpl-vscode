@@ -108,73 +108,100 @@
         }
       }
     ],
-    "configuration": {
-      "title": "Colorful tmpl",
-      "properties": {
-        "colorful-tmpl.palette.enabled": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Master switch for every background this extension paints: the nesting bands **and** the variable, function, pipe and comment highlights. The template's own syntax colours (TextMate grammar and semantic tokens) stay. To drop a single class instead, use `#colorful-tmpl.palette.variableHighlight#` or `#colorful-tmpl.palette.functionHighlight#`."
-        },
-        "colorful-tmpl.palette.variableHighlight": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Highlight variable definitions, assignments and uses (`$x :=`, `$x =`, `$x`, `.Field`) with distinct backgrounds. Off leaves the nesting bands, functions and pipes in place."
-        },
-        "colorful-tmpl.palette.functionHighlight": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Highlight function calls (`print`, `index`, `coll.Slice`, …) with a distinct background. Off leaves the nesting bands, variables and pipes in place."
-        },
-        "colorful-tmpl.palette.preset": {
-          "type": "string",
-          "enum": [
-            "default",
-            "highContrast",
-            "custom"
-          ],
-          "enumItemLabels": [
-            "Default",
-            "High Contrast",
-            "Custom"
-          ],
-          "markdownEnumDescriptions": [
-            "Theme-aware pastel palette (6 colors, rotates).",
-            "Theme-aware high contrast palette — stronger, more opaque backgrounds for low-vision or busy screens.",
-            "Use the colors from `#colorful-tmpl.palette.custom#`."
-          ],
-          "default": "default",
-          "markdownDescription": "Which palette to use for nesting backgrounds. `highContrast` also strengthens variable, function, pipe, and comment highlights. `custom` uses `#colorful-tmpl.palette.custom#`. Use the **Colorful tmpl: Switch Palette** command to change it without opening Settings."
-        },
-        "colorful-tmpl.palette.custom": {
-          "type": "array",
-          "items": {
-            "type": "string"
+    "configuration": [
+      {
+        "title": "Colorful tmpl",
+        "order": 1,
+        "properties": {
+          "colorful-tmpl.highlight.enabled": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Master switch for every background this extension paints: the nesting bands **and** the variable, function, pipe and comment highlights. The template's own syntax colours (TextMate grammar and semantic tokens) stay. To drop a single class instead, turn off `#colorful-tmpl.highlight.variables#` or `#colorful-tmpl.highlight.functions#`."
           },
-          "default": [
-            "rgba(173, 216, 230, 0.20)",
-            "rgba(144, 238, 144, 0.20)",
-            "rgba(255, 218, 185, 0.20)",
-            "rgba(221, 160, 221, 0.20)",
-            "rgba(255, 255, 150, 0.20)",
-            "rgba(255, 182, 193, 0.20)"
-          ],
-          "markdownDescription": "Custom background colors for nesting levels (rotates). Used when `#colorful-tmpl.palette.preset#` is `custom`. Use rgba() or hex."
-        },
-        "colorful-tmpl.palette.variableDefColor": {
-          "type": "string",
-          "markdownDescription": "Background color for variable definitions (`$x :=`). Defaults to a theme-aware green."
-        },
-        "colorful-tmpl.palette.variableAssignColor": {
-          "type": "string",
-          "markdownDescription": "Background color for variable assignments (`$x =`). Defaults to a theme-aware orange."
-        },
-        "colorful-tmpl.palette.variableUseColor": {
-          "type": "string",
-          "markdownDescription": "Background color for variable uses (`$x`). Defaults to a theme-aware blue."
+          "colorful-tmpl.highlight.variables": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Highlight variable definitions, assignments and uses (`$x :=`, `$x =`, `$x`, `.Field`) with distinct backgrounds. Off leaves the nesting bands, functions and pipes in place."
+          },
+          "colorful-tmpl.highlight.functions": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Highlight function calls (`print`, `index`, `coll.Slice`, …) with a distinct background. Off leaves the nesting bands, variables and pipes in place."
+          }
+        }
+      },
+      {
+        "title": "Colorful tmpl › Palette",
+        "order": 2,
+        "properties": {
+          "colorful-tmpl.palette.preset": {
+            "type": "string",
+            "enum": [
+              "default",
+              "highContrast",
+              "custom"
+            ],
+            "enumItemLabels": [
+              "Default",
+              "High Contrast",
+              "Custom"
+            ],
+            "markdownEnumDescriptions": [
+              "Theme-aware pastel palette (6 colors, rotates).",
+              "Theme-aware high contrast palette — stronger, more opaque backgrounds for low-vision or busy screens.",
+              "Use the colors from `#colorful-tmpl.palette.custom#`."
+            ],
+            "default": "default",
+            "markdownDescription": "Which palette to use for nesting backgrounds. `highContrast` also strengthens variable, function, pipe, and comment highlights. `custom` uses `#colorful-tmpl.palette.custom#`. Use the **Colorful tmpl: Switch Palette** command to change it without opening Settings."
+          },
+          "colorful-tmpl.palette.custom": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "rgba(173, 216, 230, 0.20)",
+              "rgba(144, 238, 144, 0.20)",
+              "rgba(255, 218, 185, 0.20)",
+              "rgba(221, 160, 221, 0.20)",
+              "rgba(255, 255, 150, 0.20)",
+              "rgba(255, 182, 193, 0.20)"
+            ],
+            "markdownDescription": "Custom background colors for nesting levels (rotates). Used when `#colorful-tmpl.palette.preset#` is `custom`. Use rgba() or hex."
+          },
+          "colorful-tmpl.palette.variableDefColor": {
+            "type": "string",
+            "markdownDescription": "Background color for variable definitions (`$x :=`). Defaults to a theme-aware green."
+          },
+          "colorful-tmpl.palette.variableAssignColor": {
+            "type": "string",
+            "markdownDescription": "Background color for variable assignments (`$x =`). Defaults to a theme-aware orange."
+          },
+          "colorful-tmpl.palette.variableUseColor": {
+            "type": "string",
+            "markdownDescription": "Background color for variable uses (`$x`). Defaults to a theme-aware blue."
+          },
+          "colorful-tmpl.palette.enabled": {
+            "type": "boolean",
+            "default": true,
+            "deprecationMessage": "Renamed to colorful-tmpl.highlight.enabled. The old key is still honoured while the new one is unset.",
+            "markdownDescription": "Deprecated alias of `#colorful-tmpl.highlight.enabled#`."
+          },
+          "colorful-tmpl.palette.variableHighlight": {
+            "type": "boolean",
+            "default": true,
+            "deprecationMessage": "Renamed to colorful-tmpl.highlight.variables. The old key is still honoured while the new one is unset.",
+            "markdownDescription": "Deprecated alias of `#colorful-tmpl.highlight.variables#`."
+          },
+          "colorful-tmpl.palette.functionHighlight": {
+            "type": "boolean",
+            "default": true,
+            "deprecationMessage": "Renamed to colorful-tmpl.highlight.functions. The old key is still honoured while the new one is unset.",
+            "markdownDescription": "Deprecated alias of `#colorful-tmpl.highlight.functions#`."
+          }
         }
       }
-    },
+    ],
     "configurationDefaults": {
       "[colorful-tmpl]": {
         "editor.semanticHighlighting.enabled": true

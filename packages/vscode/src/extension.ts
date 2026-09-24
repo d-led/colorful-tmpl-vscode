@@ -4,14 +4,16 @@ import * as vscode from "vscode";
 
 import { activationLogLine, highlightReport } from "./highlight-log.js";
 import { configuredPalette, NestingDecorator } from "./nesting-decorator.js";
-import { readHighlightSwitches } from "./palette.js";
+import {
+  HIGHLIGHT_SECTION,
+  PALETTE_SECTION,
+  readHighlightSwitches,
+} from "./palette.js";
 import { ColorfulTmplSemanticTokensProvider } from "./semantic-provider.js";
 import {
   countDecorations,
   decorationsForDocument,
 } from "./template-decorations.js";
-
-const PALETTE_CFG = "colorful-tmpl.palette";
 
 type PaletteChoice = vscode.QuickPickItem & { value: string };
 
@@ -49,14 +51,17 @@ function highlightReportForEditor(
   editor: vscode.TextEditor,
   version: string,
 ): string {
-  const cfg = vscode.workspace.getConfiguration(PALETTE_CFG);
+  const cfg = vscode.workspace.getConfiguration(PALETTE_SECTION);
   const palette = configuredPalette(cfg);
   const decorations = decorationsForDocument(
     editor.document.languageId,
     editor.document.getText(),
     palette.levels.length,
   );
-  const switches = readHighlightSwitches(cfg);
+  const switches = readHighlightSwitches(
+    vscode.workspace.getConfiguration(HIGHLIGHT_SECTION),
+    cfg,
+  );
   return highlightReport({
     version,
     preset: cfg.get<string>("preset", "default"),
@@ -111,7 +116,7 @@ function paletteUpdateTarget(
 }
 
 async function switchPalette(): Promise<void> {
-  const cfg = vscode.workspace.getConfiguration(PALETTE_CFG);
+  const cfg = vscode.workspace.getConfiguration(PALETTE_SECTION);
   const current = cfg.get<string>("preset", "default");
   const pick = await vscode.window.showQuickPick(PALETTE_CHOICES, {
     placeHolder: "Select a palette",
@@ -147,11 +152,14 @@ export function activate(context: vscode.ExtensionContext): void {
   nestingDecorator.activate();
   context.subscriptions.push(nestingDecorator);
 
-  const cfg = vscode.workspace.getConfiguration(PALETTE_CFG);
+  const cfg = vscode.workspace.getConfiguration(PALETTE_SECTION);
   const activation = activationLogLine({
     version: extensionVersion(context),
     preset: cfg.get<string>("preset", "default"),
-    ...readHighlightSwitches(cfg),
+    ...readHighlightSwitches(
+      vscode.workspace.getConfiguration(HIGHLIGHT_SECTION),
+      cfg,
+    ),
   });
   log.appendLine(activation);
   console.log(activation);

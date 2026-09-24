@@ -84,13 +84,17 @@ describe("Colorful tmpl extension", () => {
     assert.ok(editor.document.getText().startsWith("// edit"));
   });
 
-  it("ships palette settings with sensible defaults", () => {
-    const cfg = vscode.workspace.getConfiguration("colorful-tmpl.palette");
-    assert.strictEqual(cfg.get("enabled"), true);
-    assert.strictEqual(cfg.get("variableHighlight"), true);
-    assert.strictEqual(cfg.get("functionHighlight"), true);
-    assert.strictEqual(cfg.get("preset"), "default");
-    const custom = cfg.get<string[]>("custom");
+  it("ships the highlight switches and palette settings with sensible defaults", () => {
+    const highlight = vscode.workspace.getConfiguration(
+      "colorful-tmpl.highlight",
+    );
+    assert.strictEqual(highlight.get("enabled"), true);
+    assert.strictEqual(highlight.get("variables"), true);
+    assert.strictEqual(highlight.get("functions"), true);
+
+    const palette = vscode.workspace.getConfiguration("colorful-tmpl.palette");
+    assert.strictEqual(palette.get("preset"), "default");
+    const custom = palette.get<string[]>("custom");
     assert.ok(Array.isArray(custom));
     assert.strictEqual(custom.length, 6);
   });

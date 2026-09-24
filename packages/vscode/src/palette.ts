@@ -144,25 +144,51 @@ export const HIGHLIGHT_SWITCH_DEFAULTS: HighlightSwitches = {
   functionHighlight: true,
 };
 
+/**
+ * Settings sections. The switches live in their own section so they appear
+ * together (VS Code sorts settings alphabetically within a section, so a shared
+ * prefix would scatter them); palettes and colours stay in the palette section.
+ */
+export const HIGHLIGHT_SECTION = "colorful-tmpl.highlight";
+export const PALETTE_SECTION = "colorful-tmpl.palette";
+
+/** Setting name per switch, as declared in `package.json`. */
+export const HIGHLIGHT_SWITCH_KEYS: Record<keyof HighlightSwitches, string> = {
+  enabled: "enabled",
+  variableHighlight: "variables",
+  functionHighlight: "functions",
+};
+
+/** Setting name per switch before 0.1.4, still honoured as a fallback. */
+export const LEGACY_SWITCH_KEYS: Record<keyof HighlightSwitches, string> = {
+  enabled: "enabled",
+  variableHighlight: "variableHighlight",
+  functionHighlight: "functionHighlight",
+};
+
 /** The slice of `vscode.WorkspaceConfiguration` this policy reads. */
 export type ConfigurationReader = {
   get<T>(section: string, defaultValue: T): T;
 };
 
-/** Reads the switches, falling back to the defaults shipped in `package.json`. */
+/**
+ * Reads the switches from the highlight section. A value set under the
+ * pre-0.1.4 palette key still wins over the shipped default, so an existing
+ * settings.json keeps working after the rename.
+ */
 export function readHighlightSwitches(
-  cfg: ConfigurationReader,
+  highlight: ConfigurationReader,
+  legacy: ConfigurationReader,
 ): HighlightSwitches {
+  const read = (key: keyof HighlightSwitches) =>
+    highlight.get(
+      HIGHLIGHT_SWITCH_KEYS[key],
+      legacy.get(LEGACY_SWITCH_KEYS[key], HIGHLIGHT_SWITCH_DEFAULTS[key]),
+    );
   return {
-    enabled: cfg.get("enabled", HIGHLIGHT_SWITCH_DEFAULTS.enabled),
-    variableHighlight: cfg.get(
-      "variableHighlight",
-      HIGHLIGHT_SWITCH_DEFAULTS.variableHighlight,
-    ),
-    functionHighlight: cfg.get(
-      "functionHighlight",
-      HIGHLIGHT_SWITCH_DEFAULTS.functionHighlight,
-    ),
+    enabled: read("enabled"),
+    variableHighlight: read("variableHighlight"),
+    functionHighlight: read("functionHighlight"),
   };
 }
 

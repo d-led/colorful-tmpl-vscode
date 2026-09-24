@@ -89,7 +89,7 @@ describe("readHighlightSwitches", () => {
   }
 
   it("highlights everything when the user configured nothing", () => {
-    expect(readHighlightSwitches(settings({}))).toEqual({
+    expect(readHighlightSwitches(settings({}), settings({}))).toEqual({
       enabled: true,
       variableHighlight: true,
       functionHighlight: true,
@@ -99,7 +99,8 @@ describe("readHighlightSwitches", () => {
   it("honours the switches the user turned off", () => {
     expect(
       readHighlightSwitches(
-        settings({ enabled: false, variableHighlight: false }),
+        settings({ enabled: false, variables: false }),
+        settings({}),
       ),
     ).toEqual({
       enabled: false,
@@ -108,11 +109,33 @@ describe("readHighlightSwitches", () => {
     });
 
     expect(
-      readHighlightSwitches(settings({ functionHighlight: false })),
+      readHighlightSwitches(settings({ functions: false }), settings({})),
     ).toEqual({
       enabled: true,
       variableHighlight: true,
       functionHighlight: false,
     });
+  });
+
+  it("still honours the pre-0.1.4 palette keys", () => {
+    expect(
+      readHighlightSwitches(
+        settings({}),
+        settings({ variableHighlight: false, functionHighlight: false }),
+      ),
+    ).toEqual({
+      enabled: true,
+      variableHighlight: false,
+      functionHighlight: false,
+    });
+  });
+
+  it("prefers the current key when both are set", () => {
+    expect(
+      readHighlightSwitches(
+        settings({ variables: true }),
+        settings({ variableHighlight: false }),
+      ).variableHighlight,
+    ).toBe(true);
   });
 });
